@@ -1,76 +1,90 @@
 
-import { Button } from "./ui/button";
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
+import { Navigation } from './Navigation';
 
 export const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-hero-pattern bg-cover bg-center bg-no-repeat text-white">
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/80" />
+    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-b from-ccc-teal-dark via-ccc-teal to-ccc-teal-light text-white overflow-hidden">
+      <Navigation />
+      {/* Background overlays */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-ccc-teal-dark/80 via-transparent to-transparent" />
       
       <div className="container relative z-10 mx-auto px-4 py-20">
-        <div className="flex flex-col items-center justify-center space-y-12 max-w-5xl mx-auto">
+        <div className="flex flex-col items-center justify-center space-y-16 max-w-5xl mx-auto">
+          {/* Logo */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="w-full max-w-3xl"
+            className="w-full max-w-lg mx-auto"
           >
             <img 
-              src="/lovable-uploads/8cc5ded8-5c57-4ba4-9a71-10e393bcbdf4.png" 
+              src="/ccc-logo.svg" 
               alt="Craven Cancer Classic Logo" 
-              className="w-full object-contain mx-auto drop-shadow-2xl"
+              className="w-full h-auto filter drop-shadow-2xl"
             />
           </motion.div>
 
+          {/* Content */}
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="text-center"
+            className="text-center space-y-8"
           >
-            <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-light tracking-wide max-w-3xl mx-auto leading-relaxed mb-8 hero-text-shadow font-serif">
-              Join us in our mission to support cancer patients through the 
-              <span className="text-primary font-medium"> power of golf</span>
-            </h2>
+            <p className="text-xl md:text-2xl font-light text-ccc-gray-light max-w-2xl mx-auto leading-relaxed">
+              Join us in our mission to support cancer patients through the power of golf
+            </p>
             
-            <motion.div
+            <motion.button
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              whileHover={{ scale: 1.05 }}
-              className="inline-block"
+              whileHover={{ 
+                scale: 1.02,
+                transition: { duration: 0.2 }
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="mt-8 bg-white hover:bg-ccc-gray-light text-ccc-teal-dark text-xl px-16 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 uppercase tracking-wider font-bold ring-1 ring-white/10"
             >
-              <Button 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 text-white text-xl px-12 py-8 rounded-full shadow-lg transition-all duration-300 uppercase tracking-wider font-medium"
-              >
-                Donate Now
-              </Button>
-            </motion.div>
+              Donate Now
+            </motion.button>
           </motion.div>
         </div>
-      </div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-      >
-        <div className="animate-bounce">
+        {/* Bouncing Arrow */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ 
+            opacity: 1,
+            y: 10
+          }}
+          transition={{
+            repeat: Infinity,
+            repeatType: "reverse",
+            duration: 1.5,
+            ease: "easeInOut"
+          }}
+          className="fixed bottom-0 left-1/2 transform -translate-x-1/2"
+        >
           <svg 
-            className="w-6 h-6 text-white/70" 
-            fill="none" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth="2" 
+            width="40" 
+            height="40" 
             viewBox="0 0 24 24" 
-            stroke="currentColor"
+            fill="none" 
+            className="text-white"
           >
-            <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            <path 
+              d="M7 13L12 18L17 13M7 6L12 11L17 6" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
           </svg>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </section>
   );
 };
