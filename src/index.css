@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,26 +7,26 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 120 40% 98%;
+    --foreground: 120 10% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 120 10% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 120 10% 10%;
     --primary: 187 47% 55%;  /* Logo teal color */
     --primary-foreground: 210 40% 98%;
-    --secondary: 187 30% 85%; /* Lighter teal for secondary elements */
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 187 47% 55%; /* Using the same teal as primary for accent */
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --secondary: 120 30% 60%; /* Fairway green */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 120 10% 90%;
+    --muted-foreground: 120 10% 40%;
+    --accent: 43 60% 60%; /* Sand color */
+    --accent-foreground: 43 10% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 120 20% 90%;
+    --input: 120 20% 90%;
     --ring: 187 47% 55%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   body {
@@ -35,7 +35,8 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Montserrat', sans-serif;
+    @apply font-semibold tracking-tight;
   }
 }
 
