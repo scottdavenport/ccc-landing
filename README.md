@@ -1,8 +1,10 @@
-# Welcome to your Lovable project
+# 🏌️‍♂️ Craven Cancer Classic Website
 
-## Project info
+Welcome to the Craven Cancer Classic (CCC) website repository! This project serves as the official web presence for our annual golf tournament that supports cancer patients through the power of golf.
 
-**URL**: https://lovable.dev/projects/cb6768b4-f262-4945-bc6f-e2177156f244
+## 🌟 Overview
+
+The CCC website is built with modern web technologies to provide an engaging, responsive experience for our supporters, sponsors, and participants. It features a golf-inspired design system with smooth animations and intuitive navigation.
 
 ## How can I edit this code?
 
@@ -50,15 +52,16 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
+## 🛠️ Technology Stack
 
-This project is built with .
+This project leverages modern web technologies for optimal performance and maintainability:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Vite** - Next Generation Frontend Tooling
+- **TypeScript** - For type-safe code
+- **React** - UI Component Library
+- **shadcn-ui** - Beautifully designed components
+- **Tailwind CSS** - Utility-first CSS framework
+- **Framer Motion** - For smooth animations
 
 ## How can I deploy this project?
 
