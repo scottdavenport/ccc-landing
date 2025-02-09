@@ -34,18 +34,26 @@ const SupabaseStatus = () => {
         }
 
         // Test if we can reach Supabase
-        const { data, error: authError } = await supabase.from('profiles').select('count');
-        
-        if (authError) throw authError;
+        try {
+          const { data: { session }, error: authError } = await supabase.auth.getSession();
+          
+          if (authError) {
+            console.error('Supabase auth error:', authError);
+            throw authError;
+          }
 
-        setStatus('connected');
-        setErrorMessage(null);
-        if (!user) {
-          setDetails('Connected to Supabase (not authenticated)');
-          return;
+          setStatus('connected');
+          setErrorMessage(null);
+          if (!session) {
+            setDetails('Connected to Supabase (not authenticated)');
+            return;
+          }
+
+          setDetails(`Connected as ${session.user.email}${isAdmin ? ' (admin)' : ''}`);
+        } catch (authError) {
+          console.error('Error checking auth:', authError);
+          throw authError;
         }
-
-        setDetails(`Connected as ${user.email}${isAdmin ? ' (admin)' : ''}`);
       } catch (err) {
         console.error('Supabase connection error:', err);
         setStatus('error');
@@ -58,15 +66,20 @@ const SupabaseStatus = () => {
           } else if (err.message.includes('Invalid URL')) {
             setErrorMessage('Configuration Error');
             setDetails('Invalid Supabase URL - check your environment variables');
+          } else if (err.message.includes('42501')) {
+            setErrorMessage('Permission Error');
+            setDetails('Insufficient permissions to access profiles table');
           } else {
             setErrorMessage(err.message);
             setDetails(err.stack?.split('\n')[0] || 'No additional details available');
           }
           setLastError(err);
         } else {
-          setErrorMessage('Unknown Error');
+          const error = new Error(typeof err === 'string' ? err : 'Unknown error occurred while connecting to Supabase');
+          console.error('Non-Error object thrown:', err);
+          setErrorMessage(error.message);
           setDetails('An unexpected error occurred');
-          setLastError(new Error('Unknown error occurred while connecting to Supabase'));
+          setLastError(error);
         }
       }
     }
