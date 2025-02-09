@@ -66,20 +66,15 @@ const SupabaseStatus = () => {
           } else if (err.message.includes('Invalid URL')) {
             setErrorMessage('Configuration Error');
             setDetails('Invalid Supabase URL - check your environment variables');
-          } else if (err.message.includes('42501')) {
-            setErrorMessage('Permission Error');
-            setDetails('Insufficient permissions to access profiles table');
           } else {
             setErrorMessage(err.message);
             setDetails(err.stack?.split('\n')[0] || 'No additional details available');
           }
           setLastError(err);
         } else {
-          const error = new Error(typeof err === 'string' ? err : 'Unknown error occurred while connecting to Supabase');
-          console.error('Non-Error object thrown:', err);
-          setErrorMessage(error.message);
+          setErrorMessage('Unknown Error');
           setDetails('An unexpected error occurred');
-          setLastError(error);
+          setLastError(new Error('Unknown error occurred while connecting to Supabase'));
         }
       }
     }
