@@ -18,12 +18,28 @@ export const getCloudinaryImage = (publicId: string) => {
 
 export const fetchCloudinaryImages = async () => {
   try {
-    const response = await fetch('/api/cloudinary/search', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
+    const apiSecret = import.meta.env.VITE_CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      throw new Error('Missing Cloudinary credentials');
     }
+
+    const auth = btoa(`${apiKey}:${apiSecret}`);
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/resources/search`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          expression: 'folder=sponsors',
+          max_results: 100
+        })
+      }
     );
 
     if (!response.ok) {
