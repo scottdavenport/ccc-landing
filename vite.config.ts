@@ -4,7 +4,9 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
   server: {
     host: "::",
     port: 8080,
@@ -24,4 +26,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     }
   }
+  };
 });
