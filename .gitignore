@@ -64,3 +64,4 @@ out/
 
 # Windsurf specific
 .windsurfrules
+.vercel
