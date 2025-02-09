@@ -1,0 +1,27 @@
+# Windsurf Rules for Craven Cancer Classic
+
+## 📌 Description
+Maintain a **modern, golf-inspired UI** for the **Craven Cancer Classic** with **clean, responsive TailwindCSS components**. Ensure all **event date changes dynamically update across the site**. Prioritize **sponsor visibility and donor engagement**.
+
+## ⚙️ Rules
+
+### 🏗️ UI & Design Consistency
+- Ensure **consistent spacing and padding** on all elements, maintaining a **sleek, high-end aesthetic**.
+- Optimize images for **fast loading times**.
+- Use **Tailwind’s color utilities** for **theme consistency**.
+
+### 🎨 Homepage Enhancements
+- **Smooth transitions and animations** should enhance engagement.
+- **Primary CTA buttons** must be **visually distinct** to drive donations and registrations.
+
+### 🏆 Sponsor Recognition
+- Sponsors must be **dynamically categorized** with a **clear visual hierarchy**.
+- **Top-tier sponsors** should have **premium placement** for visibility.
+
+### 📅 Tournament Date Automation
+- The **tournament date should be stored in a single location**.
+- All **relevant sections must dynamically update** when the date changes.
+
+---
+
+This Markdown format makes it **easy to reference, edit, and use within Windsurf**. 🚀 Let me know if you need modifications! 
