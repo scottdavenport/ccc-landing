@@ -56,7 +56,8 @@ The site includes a secure admin dashboard for managing tournament details, user
 Admin features include:
 - User management interface for viewing and monitoring user accounts
 - Role-based access control
-- Interactive connection status monitoring
+- Interactive connection status monitoring with real-time authentication state
+- Secure admin-only operations using service role client
 
 Contact the project maintainers to request admin access.
 

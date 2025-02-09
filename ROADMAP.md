@@ -14,6 +14,7 @@
 - [x] Implement scroll indicator animation
 - [ ] Create dynamic Funds Raised component with visual progress
 - [ ] Implement tiered Sponsor showcase (Platinum, Gold, Silver)
+- [ ] Integrate Cloudinary for sponsor logo management and optimization
 - [ ] Add Past Winners highlight section
 - [ ] Add tournament countdown timer
 
