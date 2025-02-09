@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+### Fixed
+- Fixed admin authentication state management
+- Added proper loading states while fetching user profile
+- Improved error handling for non-admin users
+- Added `/logout` endpoint for consistent logout behavior
+- Fixed profile fetching to correctly identify admin users
+- Improved admin route redirects and navigation flow
+
+
 All notable changes to the Craven Cancer Classic website will be documented in this file.
 
 ## [Unreleased]
@@ -22,6 +32,11 @@ All notable changes to the Craven Cancer Classic website will be documented in t
   - Login page with Supabase Auth UI
   - User session management
   - Sign out functionality
+- Role-based access control
+  - Added user roles (admin, user)
+  - Admin-only route protection
+  - User profile management
+  - Database schema for role management
 
 ### Changed
 - Updated project structure to support new requirements
