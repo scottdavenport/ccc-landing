@@ -27,6 +27,7 @@
 
 ### Admin Features
 - [x] Create basic admin dashboard layout
+- [x] Implement interactive Supabase connection status
 - [ ] Set up data management for sponsors
 - [ ] Create tournament details configuration system
 - [ ] Implement dynamic date management across site

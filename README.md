@@ -38,6 +38,17 @@ npm i
 npm run dev
 ```
 
+## Environment Configuration
+
+This project uses Supabase for its backend. You'll need to set up the following environment variables in a `.env.local` file:
+
+```sh
+VITE_SUPABASE_URL=your-project-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+You can find these values in your Supabase project settings. The admin dashboard includes an interactive connection status indicator to help verify your Supabase configuration.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
