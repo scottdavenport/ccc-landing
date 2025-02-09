@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 type UserRole = {
   role: string;
@@ -28,6 +29,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -48,6 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('Setting admin status:', { email: user.email, role, isAdmin: adminStatus });
     
     setIsAdmin(adminStatus);
+    
+    // Redirect non-admin users to home
+    if (!adminStatus && window.location.pathname.startsWith('/admin')) {
+      console.log('Non-admin user detected, redirecting to home');
+      navigate('/');
+    }
   };
 
   useEffect(() => {
