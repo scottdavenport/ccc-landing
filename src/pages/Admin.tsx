@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 const SupabaseStatus = lazy(() => import('@/components/SupabaseStatus'));
+const CloudinaryStatus = lazy(() => import('@/components/CloudinaryStatus'));
+const SponsorUpload = lazy(() => import('@/components/admin/SponsorUpload'));
 
 const Admin = () => {
   const { user, signOut, loading, profile, isAdmin } = useAuth();
@@ -97,9 +99,11 @@ const Admin = () => {
           >
             <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
             <div className="space-y-3">
-              <button className="w-full px-4 py-2 bg-ccc-teal text-white rounded hover:bg-ccc-teal-dark transition-colors">
-                Add New Sponsor
-              </button>
+              <ErrorBoundary>
+                <Suspense fallback={<div className="w-full px-4 py-2 bg-gray-300 text-white rounded">Loading...</div>}>
+                  <SponsorUpload />
+                </Suspense>
+              </ErrorBoundary>
               <button className="w-full px-4 py-2 bg-ccc-teal text-white rounded hover:bg-ccc-teal-dark transition-colors">
                 View Registrations
               </button>
@@ -130,7 +134,10 @@ const Admin = () => {
       <footer className="container mx-auto px-4 py-4 border-t border-gray-200">
         <ErrorBoundary>
           <Suspense fallback={<div className="text-sm text-gray-500">Loading status...</div>}>
-            <SupabaseStatus />
+            <div className="space-y-2">
+              <SupabaseStatus />
+              <CloudinaryStatus />
+            </div>
           </Suspense>
         </ErrorBoundary>
       </footer>
