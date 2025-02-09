@@ -4,7 +4,7 @@
 ### Fixed
 - Fixed admin authentication by storing and checking roles in Supabase user metadata
 - Improved auth state management and role checking in AuthContext
-- Added automatic redirect to home for non-admin users attempting to access admin pages
+- Added automatic logout for non-admin users attempting to access admin pages
 
 
 ## [Unreleased]
