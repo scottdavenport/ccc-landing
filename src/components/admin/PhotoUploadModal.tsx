@@ -5,17 +5,21 @@ import { AdvancedImage } from '@cloudinary/react';
 import { getCloudinaryImage } from '@/lib/cloudinary';
 import { toast } from 'sonner';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 
 interface PhotoUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onUploadComplete?: (uploadedImages: string[]) => void;
 }
 
-export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalProps) {
+export default function PhotoUploadModal({ isOpen, onClose, onUploadComplete }: PhotoUploadModalProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: { progress: number; speed: number; timeLeft: number } }>({});
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [imageTransforms, setImageTransforms] = useState<{ [key: string]: { rotate: number; crop: { x: number; y: number; width: number; height: number } | null } }>({});
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles((prev) => [...prev, ...acceptedFiles]);
@@ -24,19 +28,36 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
     },
-    maxSize: 5 * 1024 * 1024 // 5MB
+    maxSize: 10 * 1024 * 1024, // 10MB
+    multiple: true
   });
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const calculateUploadStats = (loaded: number, total: number, startTime: number) => {
+    const progress = Math.round((loaded * 100) / total);
+    const currentTime = Date.now();
+    const elapsedTime = (currentTime - startTime) / 1000; // seconds
+    const speed = loaded / elapsedTime; // bytes per second
+    const remainingBytes = total - loaded;
+    const timeLeft = remainingBytes / speed; // seconds
+
+    return {
+      progress,
+      speed: speed / 1024, // Convert to KB/s
+      timeLeft: Math.round(timeLeft)
+    };
+  };
+
   const handleUpload = async () => {
     if (files.length === 0) return;
 
     setIsUploading(true);
+    const uploadStartTime = Date.now();
     const uploadPromises = files.map(async (file) => {
       try {
         const formData = new FormData();
@@ -44,14 +65,29 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
         formData.append('upload_preset', 'sponsors');
         formData.append('api_key', import.meta.env.VITE_CLOUDINARY_API_KEY);
 
+        // Add image transformations if they exist
+        const transform = imageTransforms[file.name];
+        if (transform) {
+          if (transform.rotate) {
+            formData.append('angle', transform.rotate.toString());
+          }
+          if (transform.crop) {
+            formData.append('crop', 'crop');
+            formData.append('x', transform.crop.x.toString());
+            formData.append('y', transform.crop.y.toString());
+            formData.append('width', transform.crop.width.toString());
+            formData.append('height', transform.crop.height.toString());
+          }
+        }
+
         const xhr = new XMLHttpRequest();
         const promise = new Promise<string>((resolve, reject) => {
           xhr.upload.addEventListener('progress', (event) => {
             if (event.lengthComputable) {
-              const progress = Math.round((event.loaded * 100) / event.total);
+              const stats = calculateUploadStats(event.loaded, event.total, uploadStartTime);
               setUploadProgress((prev) => ({
                 ...prev,
-                [file.name]: progress
+                [file.name]: stats
               }));
             }
           });
@@ -83,9 +119,11 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
       const results = await Promise.all(uploadPromises);
       const successfulUploads = results.filter((id): id is string => id !== null);
       setUploadedImages((prev) => [...prev, ...successfulUploads]);
+      onUploadComplete?.(successfulUploads);
       toast.success(`Successfully uploaded ${successfulUploads.length} images`);
       setFiles([]);
       setUploadProgress({});
+      setImageTransforms({});
     } catch (error) {
       console.error('Upload failed:', error);
       toast.error('Some uploads failed. Please try again.');
@@ -166,26 +204,64 @@ export default function PhotoUploadModal({ isOpen, onClose }: PhotoUploadModalPr
                   <div className="mt-4 space-y-4">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       {files.map((file, index) => (
-                        <div key={file.name} className="relative">
+                        <motion.div
+                          key={file.name}
+                          className="relative"
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ duration: 0.2 }}
+                          layoutId={`image-${file.name}`}
+                        >
                           <img
                             src={URL.createObjectURL(file)}
                             alt={file.name}
-                            className="w-full aspect-square object-cover rounded-lg"
+                            className={`w-full aspect-square object-cover rounded-lg cursor-pointer transition-transform duration-200 ${selectedImageIndex === index ? 'ring-4 ring-ccc-teal' : ''}`}
+                            onClick={() => setSelectedImageIndex(index)}
+                            style={{
+                              transform: `rotate(${imageTransforms[file.name]?.rotate || 0}deg)`
+                            }}
                           />
-                          <button
-                            onClick={() => removeFile(index)}
-                            className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-black/75"
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                          </button>
-                          {uploadProgress[file.name] !== undefined && (
-                            <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-                              <div className="bg-white rounded-lg px-3 py-1">
-                                {uploadProgress[file.name]}%
+                          <div className="absolute top-2 right-2 flex space-x-2">
+                            <button
+                              onClick={() => {
+                                const currentRotation = imageTransforms[file.name]?.rotate || 0;
+                                setImageTransforms(prev => ({
+                                  ...prev,
+                                  [file.name]: { ...prev[file.name], rotate: currentRotation + 90 }
+                                }));
+                              }}
+                              className="bg-black/50 text-white p-1 rounded-full hover:bg-black/75"
+                            >
+                              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => removeFile(index)}
+                              className="bg-black/50 text-white p-1 rounded-full hover:bg-black/75"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                          {uploadProgress[file.name] && (
+                            <div className="absolute inset-x-4 bottom-4">
+                              <div className="bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg space-y-1">
+                                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-ccc-teal transition-all duration-300 ease-out"
+                                    style={{ width: `${uploadProgress[file.name].progress}%` }}
+                                  />
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-600">
+                                  <span>{uploadProgress[file.name].progress}%</span>
+                                  <span>{Math.round(uploadProgress[file.name].speed)} KB/s</span>
+                                  <span>{uploadProgress[file.name].timeLeft}s left</span>
+                                </div>
                               </div>
                             </div>
                           )}
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
 
