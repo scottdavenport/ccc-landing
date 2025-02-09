@@ -1,10 +1,24 @@
 import { motion } from 'framer-motion';
 import { Suspense, lazy } from 'react';
+import { Link } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const SupabaseStatus = lazy(() => import('@/components/SupabaseStatus'));
 
 const Admin = () => {
+  const { user, signOut, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-ccc-teal" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin Header */}
@@ -12,19 +26,32 @@ const Admin = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <img 
-                src="/ccc-logo.svg" 
-                alt="CCC Logo" 
-                className="h-8 w-auto"
-              />
+              <Link to="/" className="hover:opacity-80 transition-opacity">
+                <img 
+                  src="/ccc-logo.svg" 
+                  alt="CCC Logo" 
+                  className="h-8 w-auto"
+                />
+              </Link>
               <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
             </div>
-            <a 
-              href="/"
-              className="text-ccc-teal hover:text-ccc-teal-dark transition-colors"
-            >
-              Return to Site
-            </a>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                {user?.email}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => signOut()}
+              >
+                Sign Out
+              </Button>
+              <Link 
+                to="/"
+                className="text-ccc-teal hover:text-ccc-teal-dark transition-colors"
+              >
+                Return to Site
+              </Link>
+            </div>
           </div>
         </div>
       </header>

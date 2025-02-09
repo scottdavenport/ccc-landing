@@ -17,6 +17,11 @@ All notable changes to the Craven Cancer Classic website will be documented in t
   - Added global error boundary
   - Added route-level error boundaries
   - Added component-level error boundaries for major components
+- Authentication system for admin dashboard
+  - Protected routes with authentication checks
+  - Login page with Supabase Auth UI
+  - User session management
+  - Sign out functionality
 
 ### Changed
 - Updated project structure to support new requirements
