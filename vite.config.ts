@@ -6,37 +6,25 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  return ({
+  return {
   server: {
     host: "::",
     port: 8080,
-    proxy: {
-      '/api/cloudinary': {
-        target: 'https://api.cloudinary.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/cloudinary/, '/v1_1'),
-        configure: (proxy, options) => {
-          proxy.on('proxyReq', (proxyReq, req, res) => {
-            const apiKey = env.VITE_CLOUDINARY_API_KEY;
-            const apiSecret = env.VITE_CLOUDINARY_API_SECRET;
-            if (apiKey && apiSecret) {
-              const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
-              proxyReq.setHeader('Authorization', `Basic ${auth}`);
-            }
-          });
-        }
-      }
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
     }
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
+    componentTagger()
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-    },
-  },
-});
+    }
+  }
+  };
 });
