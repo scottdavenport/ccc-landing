@@ -49,6 +49,10 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 You can find these values in your Supabase project settings. The admin dashboard includes an interactive connection status indicator to help verify your Supabase configuration.
 
+### Admin Access
+
+The site includes a secure admin dashboard for managing tournament details and content. Admin access is controlled through Supabase user metadata, with role-based access control implemented. Contact the project maintainers to request admin access.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
