@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "@/pages/Index";
 import Admin from "@/pages/Admin";
 import Login from "@/pages/Login";
+import Logout from "@/pages/Logout";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,10 +19,10 @@ const App = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
           <BrowserRouter>
             <AuthProvider>
+              <Toaster />
+              <Sonner />
               <Routes>
                 <Route path="/" element={
                   <ErrorBoundary>
@@ -38,6 +39,11 @@ const App = () => {
                 <Route path="/admin/login" element={
                   <ErrorBoundary>
                     <Login />
+                  </ErrorBoundary>
+                } />
+                <Route path="/logout" element={
+                  <ErrorBoundary>
+                    <Logout />
                   </ErrorBoundary>
                 } />
                 <Route path="*" element={

@@ -5,10 +5,11 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function Login() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
-  // If user is already logged in, redirect to admin
-  if (user && !loading) {
+  // If user is already logged in and is admin, redirect to admin panel
+  if (user && !loading && isAdmin) {
+    console.log('Redirecting admin user to /admin');
     return <Navigate to="/admin" replace />;
   }
 

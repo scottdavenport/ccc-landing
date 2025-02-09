@@ -9,7 +9,14 @@ import { Loader2 } from 'lucide-react';
 const SupabaseStatus = lazy(() => import('@/components/SupabaseStatus'));
 
 const Admin = () => {
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, profile, isAdmin } = useAuth();
+
+  console.log('Admin Component State:', {
+    loading,
+    user,
+    profile,
+    isAdmin
+  });
 
   if (loading) {
     return (
@@ -39,12 +46,13 @@ const Admin = () => {
               <span className="text-sm text-gray-600">
                 {user?.email}
               </span>
-              <Button
-                variant="outline"
-                onClick={() => signOut()}
-              >
-                Sign Out
-              </Button>
+              <Link to="/logout">
+                <Button
+                  variant="outline"
+                >
+                  Sign Out
+                </Button>
+              </Link>
               <Link 
                 to="/"
                 className="text-ccc-teal hover:text-ccc-teal-dark transition-colors"
