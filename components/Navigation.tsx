@@ -25,27 +25,25 @@ export const Navigation = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-background border-b"
+        className="bg-ccc-teal-dark/50 backdrop-blur-sm border-white/10 border-b"
       >
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex space-x-4">
               <Link 
                 href="/admin"
-                className="text-foreground font-medium hover:text-muted-foreground transition-colors"
-              >
+                className="text-white/90 font-medium hover:text-white transition-colors"  >
                 Dashboard
               </Link>
               <Link 
                 href="/admin/users"
-                className="text-foreground font-medium hover:text-muted-foreground transition-colors"
-              >
+                className="text-white/90 font-medium hover:text-white transition-colors"  >
                 Users
               </Link>
             </div>
             <button
               onClick={handleLogout}
-              className="text-foreground font-medium hover:text-muted-foreground transition-colors"
+              className="text-white/90 font-medium hover:text-white transition-colors"
             >
               Logout
             </button>

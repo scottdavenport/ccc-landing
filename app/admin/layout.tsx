@@ -8,7 +8,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,16 +21,16 @@ export default async function AdminLayout({
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { user }, error } = await supabase.auth.getUser()
 
-  if (!session) {
+  if (!user || error) {
     redirect('/login')
   }
 
   return (
     <div className="flex min-h-screen flex-col">
       <Navigation />
-      <main className="flex-1 container mx-auto py-6 px-4">
+      <main className="flex-1">
         {children}
       </main>
     </div>

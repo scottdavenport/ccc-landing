@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 
 export const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-b from-ccc-teal-dark via-ccc-teal to-ccc-teal-light text-white overflow-hidden">
+    <section className="relative min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-ccc-teal-dark via-ccc-teal to-ccc-teal-light text-white overflow-hidden">
       <Navigation />
       {/* Background overlays */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/20 to-transparent" />
@@ -40,19 +40,20 @@ export const Hero = () => {
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
             className="text-center space-y-8"
           >
-            <p className="text-xl md:text-2xl font-light text-ccc-gray-light max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl font-light text-white max-w-2xl mx-auto leading-relaxed">
               Join us in our mission to support cancer patients through the power of golf
             </p>
             
-            <Link href="/donate">
+            <div>
               <Button
+                asChild
                 size="lg"
                 variant="secondary"
-                className="mt-8 text-xl px-16 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 uppercase tracking-wider font-bold ring-1 ring-white/10"
+                className="bg-white/10 hover:bg-white/20 text-white border-2 border-white/20 mt-8 text-xl px-16 py-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 uppercase tracking-wider font-bold"
               >
-                Donate Now
+                <Link href="/donate">DONATE NOW</Link>
               </Button>
-            </Link>
+            </div>
           </motion.div>
         </div>
 

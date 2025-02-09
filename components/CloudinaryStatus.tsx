@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react'
 
 const cloudinaryName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 
-const CloudinaryStatus = () => {
+export const CloudinaryStatus = () => {
   const { isAdmin } = useAuth()
   const [status, setStatus] = useState<'checking' | 'connected' | 'error'>('checking')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -64,47 +64,114 @@ const CloudinaryStatus = () => {
   }
 
   return (
-    <Card className="p-4 bg-background/50 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center gap-3 text-sm"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-lg overflow-hidden"
+    >
+      <button
+        type="button"
+        onClick={() => {
+          if (status === 'error' && lastError) {
+            toast.error('Cloudinary Connection Error', {
+              description: (
+                <div className="mt-2 space-y-2 text-sm">
+                  <div>
+                    <span className="font-semibold">Message: </span>
+                    {lastError.message}
+                  </div>
+                  {lastError.stack && (
+                    <div className="font-mono text-xs whitespace-pre-wrap overflow-auto max-h-40">
+                      {lastError.stack}
+                    </div>
+                  )}
+                </div>
+              ),
+              duration: 10000,
+              action: {
+                label: 'Copy',
+                onClick: () => {
+                  const errorText = `Error: ${lastError.message}\n\nStack Trace:\n${lastError.stack}`;
+                  navigator.clipboard.writeText(errorText);
+                  toast.success('Error details copied to clipboard');
+                },
+              },
+            });
+          } else if (status === 'connected') {
+            toast.success('Cloudinary Connection Details', {
+              description: (
+                <div className="mt-2 space-y-2 text-sm">
+                  <div>
+                    <span className="font-semibold">Status: </span>
+                    <span className="text-green-600">Connected</span>
+                  </div>
+                  {details && (
+                    <div>
+                      <span className="font-semibold">Details: </span>
+                      <span className="text-muted-foreground">{details}</span>
+                    </div>
+                  )}
+                </div>
+              ),
+              duration: 5000,
+            });
+          } else if (status === 'checking') {
+            toast.info('Checking Cloudinary connection...', {
+              description: 'Verifying connection to project...',
+              duration: 2000,
+            });
+          }
+        }}
+        className="w-full p-4 text-left hover:bg-black/5 transition-colors"
       >
-        <span className="text-muted-foreground font-medium">Cloudinary Status:</span>
-        {status === 'checking' && (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Checking connection...</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              {status === 'checking' && (
+                <div className="h-3 w-3 rounded-full bg-yellow-400 animate-pulse" />
+              )}
+              {status === 'connected' && (
+                <div className="h-3 w-3 rounded-full bg-green-400" />
+              )}
+              {status === 'error' && (
+                <div className="h-3 w-3 rounded-full bg-red-400" />
+              )}
+            </div>
+            <div>
+              <h3 className="font-medium">Cloudinary Status</h3>
+              <p className={`text-sm ${status === 'error' ? 'text-red-500' : 'text-gray-500'}`}>
+                {status === 'checking' && 'Checking connection...'}
+                {status === 'connected' && 'Connected'}
+                {status === 'error' && errorMessage}
+              </p>
+              {details && (
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {details}
+                </p>
+              )}
+            </div>
           </div>
-        )}
-        {status === 'connected' && (
-          <div className="flex items-center gap-2">
-            <motion.div
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
-              className="h-2 w-2 rounded-full bg-green-500"
-            />
-            <span className="text-green-500 font-medium">Connected</span>
-            {details && (
-              <span className="text-muted-foreground">({details})</span>
-            )}
+          <div className="text-gray-400">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
           </div>
-        )}
-        {status === 'error' && (
-          <div className="flex items-center gap-2">
-            <motion.div
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
-              className="h-2 w-2 rounded-full bg-destructive"
-            />
-            <span className="text-destructive font-medium">
-              Error: {errorMessage}
-            </span>
-          </div>
-        )}
-      </motion.div>
-    </Card>
+        </div>
+      </button>
+    </motion.div>
   )
 }
 
-export default CloudinaryStatus
+
