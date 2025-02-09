@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-const supabase = createClient(
-  supabaseUrl || '',
-  supabaseAnonKey || '',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true
-    }
-  }
-);
 
 const SupabaseStatus = () => {
+  const { user, isAdmin } = useAuth();
   const [status, setStatus] = useState<'checking' | 'connected' | 'error'>('checking');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [details, setDetails] = useState<string | null>(null);
@@ -27,8 +17,8 @@ const SupabaseStatus = () => {
     async function checkConnection() {
       try {
         // First check if we have valid config
-        if (!supabaseUrl || !supabaseAnonKey) {
-          throw new Error('Missing Supabase environment variables');
+        if (!supabaseUrl) {
+          throw new Error('Missing Supabase URL environment variable');
         }
 
         // Validate URL format
@@ -44,20 +34,26 @@ const SupabaseStatus = () => {
         }
 
         // Test if we can reach Supabase
-        const { data: { session }, error: authError } = await supabase.auth.getSession();
-        
-        if (authError) throw authError;
+        try {
+          const { data: { session }, error: authError } = await supabase.auth.getSession();
+          
+          if (authError) {
+            console.error('Supabase auth error:', authError);
+            throw authError;
+          }
 
-        if (!session) {
           setStatus('connected');
           setErrorMessage(null);
-          setDetails('Connected to Supabase (not authenticated)');
-          return;
-        }
+          if (!session) {
+            setDetails('Connected to Supabase (not authenticated)');
+            return;
+          }
 
-        setStatus('connected');
-        setErrorMessage(null);
-        setDetails(`Connected as ${session.user?.email || 'unknown user'}`);
+          setDetails(`Connected as ${session.user.email}${isAdmin ? ' (admin)' : ''}`);
+        } catch (authError) {
+          console.error('Error checking auth:', authError);
+          throw authError;
+        }
       } catch (err) {
         console.error('Supabase connection error:', err);
         setStatus('error');
@@ -133,7 +129,7 @@ const SupabaseStatus = () => {
                 </div>
                 <div>
                   <span className="font-semibold">Auth: </span>
-                  <span className="text-yellow-600">Not authenticated</span>
+                  <span className={user ? 'text-green-600' : 'text-yellow-600'}>{user ? `Authenticated${isAdmin ? ' (admin)' : ''}` : 'Not authenticated'}</span>
                 </div>
                 <div className="text-xs text-gray-500 mt-2">
                   Click to copy project URL
