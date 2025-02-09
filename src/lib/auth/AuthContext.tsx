@@ -51,10 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     setIsAdmin(adminStatus);
     
-    // Redirect non-admin users to home
+    // Sign out non-admin users
     if (!adminStatus && window.location.pathname.startsWith('/admin')) {
-      console.log('Non-admin user detected, redirecting to home');
-      navigate('/');
+      console.log('Non-admin user detected, signing out');
+      supabase.auth.signOut().then(() => {
+        navigate('/');
+      });
     }
   };
 
