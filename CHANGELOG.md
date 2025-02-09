@@ -13,6 +13,10 @@ All notable changes to the Craven Cancer Classic website will be documented in t
 - Quick action buttons for common admin tasks
 - Interactive Supabase connection status with detailed connection info
 - Toast notifications for connection status and errors
+- Error boundaries for improved error handling and recovery
+  - Added global error boundary
+  - Added route-level error boundaries
+  - Added component-level error boundaries for major components
 
 ### Changed
 - Updated project structure to support new requirements
