@@ -103,9 +103,11 @@ const Admin = () => {
               <button className="w-full px-4 py-2 bg-ccc-teal text-white rounded hover:bg-ccc-teal-dark transition-colors">
                 View Registrations
               </button>
-              <button className="w-full px-4 py-2 bg-ccc-teal text-white rounded hover:bg-ccc-teal-dark transition-colors">
-                Manage Tournament
-              </button>
+              <Link to="/admin/users" className="block w-full">
+                <button className="w-full px-4 py-2 bg-ccc-teal text-white rounded hover:bg-ccc-teal-dark transition-colors">
+                  Manage Users
+                </button>
+              </Link>
             </div>
           </motion.div>
 
