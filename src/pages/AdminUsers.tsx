@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,10 +17,8 @@ type UserData = {
   id: string;
   email: string;
   created_at: string;
-  last_sign_in_at: string;
-  raw_user_meta_data: {
-    role?: string;
-  };
+  updated_at: string;
+  role: string;
 };
 
 const AdminUsers = () => {
@@ -32,7 +30,7 @@ const AdminUsers = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const { data: { users }, error } = await supabase.auth.admin.listUsers();
+        const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
         
         if (error) {
           throw error;
@@ -107,21 +105,16 @@ const AdminUsers = () => {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead>Last Sign In</TableHead>
+                  <TableHead>Last Updated</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.raw_user_meta_data.role || 'user'}</TableCell>
+                    <TableCell>{user.role || 'user'}</TableCell>
                     <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      {user.last_sign_in_at 
-                        ? new Date(user.last_sign_in_at).toLocaleDateString()
-                        : 'Never'
-                      }
-                    </TableCell>
+                    <TableCell>{new Date(user.updated_at).toLocaleDateString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
