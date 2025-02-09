@@ -63,7 +63,7 @@ export default function PhotoUploadModal({ isOpen, onClose, onUploadComplete }: 
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', 'sponsors');
-        formData.append('api_key', import.meta.env.VITE_CLOUDINARY_API_KEY);
+        formData.append('api_key', process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY!);
 
         // Add image transformations if they exist
         const transform = imageTransforms[file.name];
@@ -104,7 +104,7 @@ export default function PhotoUploadModal({ isOpen, onClose, onUploadComplete }: 
           xhr.onerror = () => reject(new Error('Upload failed'));
         });
 
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`);
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`);
         xhr.send(formData);
 
         return promise;

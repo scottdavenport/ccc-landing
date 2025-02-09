@@ -87,7 +87,6 @@
     "dotenv": "16.4.7",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
-    "eslint-plugin-react-refresh": "^0.4.9",
     "express": "4.21.2",
     "globals": "^15.9.0",
     "lovable-tagger": "^1.0.19",

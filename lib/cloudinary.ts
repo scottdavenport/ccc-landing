@@ -1,7 +1,7 @@
 import { Cloudinary } from '@cloudinary/url-gen';
 import { Resize } from '@cloudinary/url-gen/actions/resize';
 
-const cloudinaryCloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const cloudinaryCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
 
 if (!cloudinaryCloudName) {
   throw new Error('Missing Cloudinary cloud name');

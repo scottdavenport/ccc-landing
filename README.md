@@ -43,8 +43,8 @@ npm run dev
 This project uses Supabase for its backend. You'll need to set up the following environment variables in a `.env.local` file:
 
 ```sh
-VITE_SUPABASE_URL=your-project-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 You can find these values in your Supabase project settings. The admin dashboard includes an interactive connection status indicator to help verify your Supabase configuration.
@@ -79,7 +79,7 @@ Contact the project maintainers to request admin access.
 
 This project leverages modern web technologies for optimal performance and maintainability:
 
-- **Vite** - Next Generation Frontend Tooling
+- **Next.js** - The React Framework for Production
 - **TypeScript** - For type-safe code
 - **React** - UI Component Library
 - **shadcn-ui** - Beautifully designed components

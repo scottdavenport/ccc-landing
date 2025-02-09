@@ -1,16 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Direct access to environment variables for debugging
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Debug log all environment variables
+// Debug log environment variables
 console.log('Environment Variables:', {
-  available: Object.keys(import.meta.env),
   supabaseUrl,
-  mode: import.meta.env.MODE,
-  dev: import.meta.env.DEV,
-  prod: import.meta.env.PROD
+  isDev: process.env.NODE_ENV === 'development',
+  isProd: process.env.NODE_ENV === 'production'
 });
 
 if (!supabaseUrl || !supabaseAnonKey) {

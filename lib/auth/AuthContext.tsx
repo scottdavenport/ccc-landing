@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   // Check admin status from user metadata
-  const checkAdminStatus = (user: User | null) => {
+  const checkAdminStatus = (user: User | null | undefined) => {
     if (!user) {
       setIsAdmin(false)
       return
@@ -83,7 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     loading,
     isAdmin,
-    signOut: () => supabase.auth.signOut(),
+    signOut: async () => {
+      await supabase.auth.signOut()
+    },
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
