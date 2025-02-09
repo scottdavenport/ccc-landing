@@ -8,6 +8,7 @@ import { AuthProvider } from "@/lib/auth/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "@/pages/Index";
 import Admin from "@/pages/Admin";
+import AdminUsers from "@/pages/AdminUsers";
 import Login from "@/pages/Login";
 import Logout from "@/pages/Logout";
 import NotFound from "@/pages/NotFound";
@@ -33,6 +34,13 @@ const App = () => {
                   <ErrorBoundary>
                     <ProtectedRoute>
                       <Admin />
+                    </ProtectedRoute>
+                  </ErrorBoundary>
+                } />
+                <Route path="/admin/users" element={
+                  <ErrorBoundary>
+                    <ProtectedRoute>
+                      <AdminUsers />
                     </ProtectedRoute>
                   </ErrorBoundary>
                 } />

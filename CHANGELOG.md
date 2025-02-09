@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Added user management interface to admin dashboard
+
 ### Fixed
 - Fixed admin authentication by storing and checking roles in Supabase user metadata
 - Improved auth state management and role checking in AuthContext
