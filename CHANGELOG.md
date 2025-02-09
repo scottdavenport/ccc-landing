@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 ### Fixed
+- Fixed admin authentication by storing and checking roles in Supabase user metadata
+- Improved auth state management and role checking in AuthContext
+
+
+## [Unreleased]
+### Fixed
 - Fixed admin authentication state management
 - Added proper loading states while fetching user profile
 - Improved error handling for non-admin users
