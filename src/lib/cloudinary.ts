@@ -1,10 +1,21 @@
 import { Cloudinary } from '@cloudinary/url-gen';
 import { Resize } from '@cloudinary/url-gen/actions/resize';
 
+const cloudinaryCloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+
+if (!cloudinaryCloudName) {
+  throw new Error('Missing Cloudinary cloud name');
+}
+
 // Create a Cloudinary instance and set your cloud name.
 const cloudinary = new Cloudinary({
   cloud: {
-    cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+    cloudName: cloudinaryCloudName
+  },
+  url: {
+    secure: true, // Force HTTPS
+    analytics: false, // Disable analytics
+    privateCdn: false, // Use Cloudinary's shared domain
   }
 });
 
@@ -18,43 +29,18 @@ export const getCloudinaryImage = (publicId: string) => {
 
 export const fetchCloudinaryImages = async () => {
   try {
-    // Use server endpoint in preview/production, direct API in development
-    const isDev = import.meta.env.DEV;
-    let response;
-
-    if (isDev) {
-      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-      const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
-      const apiSecret = import.meta.env.VITE_CLOUDINARY_API_SECRET;
-
-      if (!cloudName || !apiKey || !apiSecret) {
-        throw new Error('Missing Cloudinary credentials in development');
-      }
-
-      const auth = btoa(`${apiKey}:${apiSecret}`);
-      response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/resources/search`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            expression: 'folder=sponsors',
-            max_results: 100
-          })
-        }
-      );
-    } else {
-      // In preview/production, use the server endpoint
-      response = await fetch('/api/cloudinary/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-    }
+    // Always use the server endpoint to avoid CORS issues
+    // Make request to the API endpoint
+    const response = await fetch('/api/cloudinary/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        expression: 'folder=sponsors',
+        max_results: 100
+      })
+    });
 
     if (!response.ok) {
       throw new Error('Failed to fetch images from Cloudinary');

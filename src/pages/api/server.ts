@@ -1,10 +1,17 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import express from 'express';
+import cors from 'cors';
+import { config } from 'dotenv';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
+// Load environment variables from .env.local
+config({ path: '.env.local' });
 
+const app = express();
+const port = 3000;
+
+app.use(cors());
+app.use(express.json());
+
+app.post('/api/cloudinary/search', async (req, res) => {
   try {
     // Log environment variables for debugging (excluding secrets)
     console.log('Environment check:', {
@@ -14,7 +21,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       nodeEnv: process.env.NODE_ENV
     });
 
-    // Use VITE_ prefixed variables in development
     const cloudName = process.env.VITE_CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.VITE_CLOUDINARY_API_KEY;
     const apiSecret = process.env.VITE_CLOUDINARY_API_SECRET;
@@ -47,9 +53,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const data = await response.json();
-    return res.status(200).json(data);
+    res.status(200).json(data);
   } catch (error) {
     console.error('Error in Cloudinary API route:', error);
-    return res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
+    res.status(500).json({ 
+      message: 'Internal server error', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
   }
-}
+});
+
+app.listen(port, () => {
+  console.log(`API server running at http://localhost:${port}`);
+});
