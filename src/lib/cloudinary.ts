@@ -18,12 +18,20 @@ export const getCloudinaryImage = (publicId: string) => {
 
 export const fetchCloudinaryImages = async () => {
   try {
+    const isDevelopment = import.meta.env.MODE === 'development';
+    const baseUrl = isDevelopment
+      ? `/api/cloudinary/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}`
+      : `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}`;
+
     const response = await fetch(
-      `/api/cloudinary/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/resources/search`,
+      `${baseUrl}/resources/search`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(!isDevelopment && {
+            'Authorization': `Basic ${btoa(`${import.meta.env.VITE_CLOUDINARY_API_KEY}:${import.meta.env.VITE_CLOUDINARY_API_SECRET}`)}`
+          })
         },
         body: JSON.stringify({
           expression: 'folder=sponsors',
