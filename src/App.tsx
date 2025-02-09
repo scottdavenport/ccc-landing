@@ -12,6 +12,7 @@ import AdminUsers from "@/pages/AdminUsers";
 import Login from "@/pages/Login";
 import Logout from "@/pages/Logout";
 import NotFound from "@/pages/NotFound";
+import PhotoUpload from "@/pages/PhotoUpload";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,13 @@ const App = () => {
                   <ErrorBoundary>
                     <ProtectedRoute>
                       <AdminUsers />
+                    </ProtectedRoute>
+                  </ErrorBoundary>
+                } />
+                <Route path="/admin/photo-upload" element={
+                  <ErrorBoundary>
+                    <ProtectedRoute>
+                      <PhotoUpload />
                     </ProtectedRoute>
                   </ErrorBoundary>
                 } />

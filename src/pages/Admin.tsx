@@ -48,6 +48,12 @@ const Admin = () => {
               <span className="text-sm text-gray-600">
                 {user?.email}
               </span>
+              <Link
+                to="/admin/photo-upload"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+              >
+                Photo Upload
+              </Link>
               <Link to="/logout">
                 <Button
                   variant="outline"
