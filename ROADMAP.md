@@ -26,6 +26,7 @@
 - [ ] Build Schedule/Event Details page
 
 ### Admin Features
+- [x] Create basic admin dashboard layout
 - [ ] Set up data management for sponsors
 - [ ] Create tournament details configuration system
 - [ ] Implement dynamic date management across site
