@@ -51,7 +51,7 @@ You can find these values in your Supabase project settings. The admin dashboard
 
 ### Admin Access
 
-The site includes a secure admin dashboard for managing tournament details and content. Admin access is controlled through Supabase user metadata, with role-based access control implemented. Contact the project maintainers to request admin access.
+The site includes a secure admin dashboard for managing tournament details and content. Admin access is controlled through Supabase user metadata, with role-based access control implemented. For security reasons, any unauthorized attempts to access admin pages will result in an automatic logout. Contact the project maintainers to request admin access.
 
 **Edit a file directly in GitHub**
 
