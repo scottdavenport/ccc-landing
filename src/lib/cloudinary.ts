@@ -18,28 +18,42 @@ export const getCloudinaryImage = (publicId: string) => {
 
 export const fetchCloudinaryImages = async () => {
   try {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
-    const apiSecret = import.meta.env.VITE_CLOUDINARY_API_SECRET;
+    // Use server endpoint in preview/production, direct API in development
+    const isDev = import.meta.env.DEV;
+    let response;
 
-    if (!cloudName || !apiKey || !apiSecret) {
-      throw new Error('Missing Cloudinary credentials');
-    }
+    if (isDev) {
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+      const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
+      const apiSecret = import.meta.env.VITE_CLOUDINARY_API_SECRET;
 
-    const auth = btoa(`${apiKey}:${apiSecret}`);
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/resources/search`,
-      {
+      if (!cloudName || !apiKey || !apiSecret) {
+        throw new Error('Missing Cloudinary credentials in development');
+      }
+
+      const auth = btoa(`${apiKey}:${apiSecret}`);
+      response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/resources/search`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            expression: 'folder=sponsors',
+            max_results: 100
+          })
+        }
+      );
+    } else {
+      // In preview/production, use the server endpoint
+      response = await fetch('/api/cloudinary/search', {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${auth}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          expression: 'folder=sponsors',
-          max_results: 100
-        })
-      }
+        }
+      });
     );
 
     if (!response.ok) {
