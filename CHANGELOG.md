@@ -11,6 +11,8 @@ All notable changes to the Craven Cancer Classic website will be documented in t
 - Design system planning based on golf-inspired themes
 - Basic admin dashboard with overview metrics
 - Quick action buttons for common admin tasks
+- Interactive Supabase connection status with detailed connection info
+- Toast notifications for connection status and errors
 
 ### Changed
 - Updated project structure to support new requirements

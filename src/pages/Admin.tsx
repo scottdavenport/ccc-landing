@@ -1,4 +1,7 @@
 import { motion } from 'framer-motion';
+import { Suspense, lazy } from 'react';
+
+const SupabaseStatus = lazy(() => import('@/components/SupabaseStatus'));
 
 const Admin = () => {
   return (
@@ -84,6 +87,13 @@ const Admin = () => {
           </motion.div>
         </div>
       </main>
+
+      {/* Footer with status */}
+      <footer className="container mx-auto px-4 py-4 border-t border-gray-200">
+        <Suspense fallback={<div className="text-sm text-gray-500">Loading status...</div>}>
+          <SupabaseStatus />
+        </Suspense>
+      </footer>
     </div>
   );
 };
