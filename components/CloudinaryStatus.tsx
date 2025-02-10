@@ -23,16 +23,12 @@ const CloudinaryStatus = () => {
         }
 
         // Test if we can reach Cloudinary API
-        // For status check, we'll verify we can reach the upload endpoint
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudinaryName}/upload`,
-          {
-            method: 'OPTIONS'
-          }
-        );
+        // For status check, we'll verify we can reach the ping endpoint
+        const response = await fetch('/api/cloudinary/ping');
 
         if (!response.ok) {
-          throw new Error(`Cloudinary API error: ${response.statusText}`);
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to connect to Cloudinary');
         }
 
         setStatus('connected');
