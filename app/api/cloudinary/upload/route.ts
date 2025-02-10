@@ -2,15 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 
 // Set runtime config
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
 // Configure Cloudinary
-cloudinary.config({
+const cloudinaryConfig = {
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '',
   api_key: process.env.CLOUDINARY_API_KEY || '',
   api_secret: process.env.CLOUDINARY_API_SECRET || ''
-});
+};
+
+cloudinary.config(cloudinaryConfig);
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +23,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Convert File to buffer
+    // Convert file to base64
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const base64 = Buffer.from(bytes).toString('base64');
+    const dataURI = `data:${file.type};base64,${base64}`;
 
     // Get transformation options from form data
     const angle = formData.get('angle');
@@ -36,7 +39,7 @@ export async function POST(request: NextRequest) {
     // Build upload options
     const uploadOptions: any = {
       resource_type: 'auto',
-      folder: 'sponsors', // Store all sponsor images in a dedicated folder
+      folder: 'sponsors',
       unique_filename: true,
       overwrite: true
     };
@@ -69,21 +72,38 @@ export async function POST(request: NextRequest) {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
 
-    // Upload to Cloudinary
-    const result = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        uploadOptions,
-        (error, result) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error);
-            reject(new Error(error.message || 'Failed to upload to Cloudinary'));
-            return;
-          }
-          resolve(result);
-        }
-      ).end(buffer);
+    // Upload to Cloudinary using fetch
+    const timestamp = Math.round((new Date()).getTime() / 1000);
+    const signature = cloudinary.utils.api_sign_request(
+      { timestamp, ...uploadOptions },
+      cloudinaryConfig.api_secret
+    );
+
+    const formDataToSend = new FormData();
+    formDataToSend.append('file', dataURI);
+    formDataToSend.append('timestamp', timestamp.toString());
+    formDataToSend.append('signature', signature);
+    formDataToSend.append('api_key', cloudinaryConfig.api_key);
+    
+    Object.entries(uploadOptions).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formDataToSend.append(key, value.toString());
+      }
     });
 
+    const uploadResponse = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloud_name}/image/upload`,
+      {
+        method: 'POST',
+        body: formDataToSend
+      }
+    );
+
+    if (!uploadResponse.ok) {
+      throw new Error('Failed to upload to Cloudinary');
+    }
+
+    const result = await uploadResponse.json();
     return NextResponse.json(result);
   } catch (error) {
     console.error('Upload error:', error);
