@@ -82,7 +82,7 @@ export default function PhotoUploadModal({ isOpen, onClose, onUploadComplete }: 
         }
 
         const xhr = new XMLHttpRequest();
-        const promise = new Promise<string>((resolve, reject) => {
+        const promise = new Promise<{ public_id: string; secure_url: string }>((resolve, reject) => {
           xhr.upload.addEventListener('progress', (event) => {
             if (event.lengthComputable) {
               const stats = calculateUploadStats(event.loaded, event.total, uploadStartTime);

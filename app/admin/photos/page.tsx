@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AdvancedImage } from '@cloudinary/react';
 import PhotoUploadModal from '@/components/admin/PhotoUploadModal';
 import { useAuth } from '@/lib/auth/AuthContext';
 import CloudinaryStatus from '@/components/CloudinaryStatus';
-import { fetchCloudinaryImages, CldImage, type CloudinaryResource } from '@/lib/cloudinary';
+import { fetchCloudinaryImages, CldImage, type CloudinaryResource, getCloudinaryImage } from '@/lib/cloudinary';
 import { motion } from 'framer-motion';
 
 export default function PhotoUpload() {
@@ -119,12 +120,14 @@ export default function PhotoUpload() {
               onClick={() => setSelectedImage(null)}
             >
               <div className="max-w-4xl max-h-[90vh] p-4">
-                <AdvancedImage
-                  cldImg={getCloudinaryImage(selectedImage)
-                    .format('auto')
-                    .quality('auto')}
-                  className="max-w-full max-h-full object-contain"
-                />
+                {selectedImage && (
+                  <AdvancedImage
+                    cldImg={getCloudinaryImage(selectedImage)!
+                      .format('auto')
+                      .quality('auto')}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                )}
               </div>
             </div>
           )}
