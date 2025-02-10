@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cloudinaryApi } from '@/lib/cloudinary/config';
 
+import { createClient } from '@/lib/supabase-server';
+
 export async function POST(request: NextRequest) {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -50,6 +58,9 @@ export async function POST(request: NextRequest) {
     try {
       const result = await cloudinaryApi('/image/upload', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: uploadParams
       });
 
