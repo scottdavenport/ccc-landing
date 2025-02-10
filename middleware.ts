@@ -34,17 +34,26 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const [sessionResponse, userResponse] = await Promise.all([
+    supabase.auth.getSession(),
+    supabase.auth.getUser()
+  ]);
 
-  // If user is not signed in and the current path starts with /admin, redirect to /login
-  if (!session && request.nextUrl.pathname.startsWith('/admin')) {
-    const redirectUrl = new URL('/login', request.url);
-    return NextResponse.redirect(redirectUrl);
+  const session = sessionResponse.data.session;
+  const user = userResponse.data.user;
+
+  // If user is not authenticated and trying to access admin pages
+  if (!session || !user) {
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+      const redirectUrl = new URL('/login', request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
+    return response;
   }
 
-  // If user is signed in but not an admin and trying to access admin pages
-  if (session && request.nextUrl.pathname.startsWith('/admin')) {
-    const isAdmin = session.user.user_metadata?.role === 'admin';
+  // Verify admin status from authenticated user data
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const isAdmin = user.user_metadata?.role === 'admin';
     if (!isAdmin) {
       const redirectUrl = new URL('/', request.url);
       return NextResponse.redirect(redirectUrl);

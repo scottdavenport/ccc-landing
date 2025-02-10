@@ -59,19 +59,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Get initial session and user
-    Promise.all([
-      supabase.auth.getSession(),
-      supabase.auth.getUser()
-    ]).then(async ([{ data: { session } }, { data: { user } }]) => {
-      console.log('Initial session:', user?.email);
-      setSession(session);
-      setUser(user);
-      checkAdminStatus(user);
-      setLoading(false);
-    }).catch(error => {
-      console.error('Error getting initial auth state:', error);
-      setLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        const [{ data: { session } }, { data: { user } }] = await Promise.all([
+          supabase.auth.getSession(),
+          supabase.auth.getUser()
+        ]);
+
+        if (user) {
+          console.log('Initial auth state:', { email: user.email });
+          setSession(session);
+          setUser(user);
+          checkAdminStatus(user);
+        } else {
+          // Clear state if no authenticated user
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error('Error getting initial auth state:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const {
@@ -79,49 +92,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log('Auth state changed:', { event: _event, email: session?.user?.email });
       
-      if (session) {
-        // Always use the user from the session for immediate UI update
-        setSession(session);
-        setUser(session.user);
-        
-        // Check admin status from session user immediately
-        const role = session.user.user_metadata?.role;
-        const adminStatus = role === 'admin';
-        console.log('Setting admin status from session:', { 
-          email: session.user.email, 
-          role, 
-          isAdmin: adminStatus 
-        });
-        setIsAdmin(adminStatus);
-        
-        // Then verify with server
+      try {
+        // Always verify user with server
         const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) {
-          console.error('Error getting user:', error);
-        } else if (user) {
-          // Update with verified user data
+        if (error) throw error;
+
+        if (user) {
+          setSession(session);
           setUser(user);
-          const verifiedRole = user.user_metadata?.role;
-          const verifiedAdminStatus = verifiedRole === 'admin';
-          if (verifiedAdminStatus !== adminStatus) {
-            console.log('Updating admin status after verification:', {
-              email: user.email,
-              role: verifiedRole,
-              isAdmin: verifiedAdminStatus
-            });
-            setIsAdmin(verifiedAdminStatus);
-          }
+          checkAdminStatus(user);
+        } else {
+          // Clear state if no authenticated user
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
         }
-      } else {
-        setUser(null);
+      } catch (error) {
+        console.error('Error during auth state change:', error);
+        // Clear state on error
         setSession(null);
+        setUser(null);
         setIsAdmin(false);
       }
-      setProfile(null);
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   console.log('AuthContext State:', {

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { configureCloudinary, cloudinaryEdgeApi, isEdgeRuntime } from '../config';
-
-export const runtime = 'edge';
+import { cloudinaryApi } from '@/lib/cloudinary/config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,65 +29,43 @@ export async function POST(request: NextRequest) {
     const height = formData.get('height');
 
     // Build upload params
-    const params: Record<string, string> = {
+    const uploadParams: Record<string, any> = {
+      file: dataURI,
       folder: 'sponsors',
-      unique_filename: 'true',
-      overwrite: 'true'
+      unique_filename: true,
+      overwrite: true
     };
 
     // Add transformation options if present
-    if (angle) params.angle = angle.toString();
+    if (angle) uploadParams.angle = parseInt(angle.toString(), 10);
     if (crop && x && y && width && height) {
-      params.crop = 'crop';
-      params.x = x.toString();
-      params.y = y.toString();
-      params.width = width.toString();
-      params.height = height.toString();
+      uploadParams.crop = 'crop';
+      uploadParams.x = parseInt(x.toString(), 10);
+      uploadParams.y = parseInt(y.toString(), 10);
+      uploadParams.width = parseInt(width.toString(), 10);
+      uploadParams.height = parseInt(height.toString(), 10);
     }
 
-    // Prepare form data
-    const formDataToSend = new FormData();
-    formDataToSend.append('file', dataURI);
-    Object.entries(params).forEach(([key, value]) => {
-      formDataToSend.append(key, value);
-    });
-
-    let result;
-
-    if (isEdgeRuntime) {
-      // Use direct API calls in Edge Runtime
-      result = await cloudinaryEdgeApi('/image/upload', {
+    // Upload to Cloudinary
+    try {
+      const result = await cloudinaryApi('/image/upload', {
         method: 'POST',
-        body: formDataToSend
+        body: uploadParams
       });
-    } else {
-      // Use SDK in development
-      const cloudinary = await configureCloudinary();
-      if (!cloudinary) {
-        throw new Error('Failed to configure Cloudinary');
-      }
-      
-      result = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { ...params },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
 
-        // Convert base64 to buffer and pipe to upload stream
-        const buffer = Buffer.from(base64, 'base64');
-        uploadStream.end(buffer);
-      });
+      return NextResponse.json(result);
+    } catch (error) {
+      console.error('Upload error:', error);
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Failed to upload file' },
+        { status: 500 }
+      );
     }
-
-    return NextResponse.json(result);
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('Request processing error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to upload image' },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : 'Failed to process request' },
+      { status: 400 }
     );
   }
 }
