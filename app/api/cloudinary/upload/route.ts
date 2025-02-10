@@ -25,7 +25,12 @@ export async function POST(request: NextRequest) {
     // Convert File to buffer
     // Convert file to base64
     const bytes = await file.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+    const uint8Array = new Uint8Array(bytes);
+    const base64 = btoa(
+      Array.from(uint8Array)
+        .map(byte => String.fromCharCode(byte))
+        .join('')
+    );
     const dataURI = `data:${file.type};base64,${base64}`;
 
     // Get transformation options from form data
