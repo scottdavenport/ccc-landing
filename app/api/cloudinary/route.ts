@@ -72,12 +72,4 @@ export async function POST(request: Request) {
     }, { status: 500, headers: corsHeaders });
   }
 }
-      stack: error.stack,
-      cause: error.cause
-    });
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500, headers: corsHeaders }
-    );
-  }
-}
+
