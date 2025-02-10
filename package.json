@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "dev:safe": "./scripts/dev-safe.sh"
   },
   "dependencies": {
     "@cloudinary/react": "1.13.1",

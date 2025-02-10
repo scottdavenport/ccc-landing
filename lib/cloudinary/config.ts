@@ -57,7 +57,8 @@ export async function cloudinaryApi(path: string, options: {
   const { cloudName, apiKey, apiSecret } = validateCredentials();
   
   // Basic auth for admin API endpoints
-  const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+  // Create base64 auth token
+  const auth = btoa(`${apiKey}:${apiSecret}`);
   
   const headers = {
     'Authorization': `Basic ${auth}`,

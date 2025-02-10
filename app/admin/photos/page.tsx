@@ -10,7 +10,6 @@ import { motion } from 'framer-motion';
 
 export default function PhotoUpload() {
   const { isAdmin } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [images, setImages] = useState<CloudinaryResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +47,7 @@ export default function PhotoUpload() {
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-lg p-6 shadow-lg">
             <h1 className="text-3xl font-bold text-gray-900">Photo Gallery</h1>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-6 py-3 text-sm font-medium text-white bg-ccc-teal rounded-md hover:bg-ccc-teal-dark transform hover:scale-105 transition-all duration-200 shadow-md"
-            >
-              Upload Photos
-            </button>
+            <PhotoUploadModal onUploadComplete={handleImageUploadComplete} />
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-6">
@@ -108,11 +102,7 @@ export default function PhotoUpload() {
           )}
 
 
-          <PhotoUploadModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onUploadComplete={handleImageUploadComplete}
-          />
+
 
           {selectedImage && (
             <div
