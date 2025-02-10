@@ -21,7 +21,11 @@ export const fetchCloudinaryImages = async (): Promise<CloudinaryResource[]> => 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify({
+        expression: 'folder=sponsors',
+        max_results: 100
+      })
     });
 
     if (!response.ok) {
@@ -31,13 +35,14 @@ export const fetchCloudinaryImages = async (): Promise<CloudinaryResource[]> => 
 
     const data = await response.json();
     if (!data.resources || !Array.isArray(data.resources)) {
-      throw new Error('Invalid response format from Cloudinary');
+      console.error('Invalid Cloudinary response:', data);
+      return [];
     }
 
     return data.resources;
   } catch (error) {
     console.error('Error fetching Cloudinary images:', error);
-    throw error;
+    return [];
   }
 };
 

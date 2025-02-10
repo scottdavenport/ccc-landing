@@ -67,16 +67,29 @@ export async function cloudinaryApi(path: string, options: {
 
   const url = `https://api.cloudinary.com/v1_1/${cloudName}${path}`;
   
-  const response = await fetch(url, {
-    method: options.method || 'GET',
-    headers,
-    ...(options.body && { body: JSON.stringify(options.body) })
-  });
+  try {
+    const response = await fetch(url, {
+      method: options.method || 'GET',
+      headers,
+      ...(options.body && { body: JSON.stringify(options.body) })
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
-    throw new Error(error.message || `Failed to make Cloudinary API request: ${response.status}`);
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse Cloudinary response:', responseText);
+      throw new Error(`Invalid JSON response from Cloudinary: ${responseText.slice(0, 100)}...`);
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || data.message || `Cloudinary API error: ${response.status}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Cloudinary API error:', error);
+    throw error;
   }
-
-  return response.json();
 }
