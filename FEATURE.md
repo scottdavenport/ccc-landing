@@ -1,54 +1,50 @@
-# 🌟 Windsurf Prompt for a Popover Modal Image Upload
+# 🌟 Photo Upload Feature Implementation
 
 ## 🎯 Project Overview
-Design a **seamless, modern image upload experience** for the **Craven Cancer Classic** website using a **popover modal UI**. The upload flow should be simple, intuitive, and visually engaging, inspired by:
-
-- **Google Photos** – Clean layout, instant previews
-- **Dropbox** – Smooth drag-and-drop upload experience with progress indicators
-- **Unsplash** – Minimalist UI with elegant previews
+Implemented a **streamlined, modern image upload experience** for the **Craven Cancer Classic** website using the **Cloudinary Upload Widget**. The upload flow is simple, intuitive, and visually engaging, leveraging Cloudinary's professional UI and features.
 
 ---
 
 ## 🚀 Key Features
-- ✅ **📂 Upload in a Popover Modal**  
-  Clicking the upload button should open a modal overlay for a focused, distraction-free upload experience.
-- ✅ **🖼️ Image Preview Before Upload**  
-  Display thumbnails before users finalize their uploads.
-- ✅ **📊 Upload Progress Indicator**  
-  Show a smooth progress bar while images are uploading.
-- ✅ **🗑️ Remove & Reorder Support**  
-  Users should be able to delete images before confirming the upload.
-- ✅ **🚀 Cloudinary Integration**  
-  Automatically handle file uploads, transformations, and optimizations.
-- ✅ **🌐 Fully Responsive**  
-  Ensure the popover modal works well on both **mobile and desktop**.
-- ✅ **⚡ Vercel Deployment Optimization**  
-  Keep the build lightweight and performant.
+- ✅ **🚀 Direct Cloudinary Widget Integration**  
+  Seamless integration with Cloudinary's professional upload widget.
+- ✅ **🖼️ Built-in Image Preview**  
+  Instant thumbnails and previews powered by Cloudinary.
+- ✅ **📊 Progress Tracking**  
+  Built-in upload progress indicators.
+- ✅ **🎨 Image Transformations**  
+  Automatic image optimization and transformations.
+- ✅ **🌐 Responsive Design**  
+  Works flawlessly on both mobile and desktop.
+- ✅ **⚡ Performance Optimized**  
+  Lightweight implementation with minimal custom code.
 
 ---
 
-## 🛠️ Tech Stack Requirements
+## 🛠️ Tech Stack Implementation
 - ✅ **Frontend:** React + TailwindCSS
-- ✅ **Storage & CDN:** Cloudinary (for storing and optimizing images)
+- ✅ **Image Management:** Cloudinary Upload Widget
+- ✅ **Storage & CDN:** Cloudinary
 - ✅ **Deployment:** Vercel
-- ✅ **Modal Handling:** Headless UI (`@headlessui/react`)
-- ✅ **File Handling:** React Dropzone
+- ✅ **Package:** `next-cloudinary`
 - ✅ **State Management:** Local state
 
 ---
 
 ## 🖥️ UI & User Flow
-1. ✅ **User clicks an "Upload Image" button → Modal opens.**
-2. ✅ **User drags and drops files OR selects them manually.**
-3. ✅ **Thumbnails appear inside the modal with remove options.**
-4. ✅ **Upload progress bar shows as files are uploaded.**
-5. ✅ **Once complete, images are stored in Cloudinary and displayed in a gallery.**
-6. ✅ **User can close the modal at any time (with confirmation if an upload is in progress).**
+1. ✅ **User clicks the "Upload Photos" button.**
+2. ✅ **Cloudinary widget opens with multiple upload options.**
+3. ✅ **User selects or drags files using Cloudinary's interface.**
+4. ✅ **Progress tracking and preview handled by Cloudinary.**
+5. ✅ **Images are automatically optimized and stored.**
+6. ✅ **Gallery updates to show the new images.**
 
 ---
 
-## ⚠️ Admin Simplicity
-- **Easy image management**: Admins can delete, update, or bulk upload images.
+## ⚠️ Admin Features
+- ✅ **Streamlined Upload Process**: One-click access to professional upload interface
+- ✅ **Built-in Image Management**: Powered by Cloudinary's widget
+- ✅ **Automatic Optimization**: Images are automatically processed for optimal delivery
 - **Metadata support**: Store additional details such as uploader name, date, and category.
 - **Automatic image optimization**: Serve optimized images via Cloudinary’s CDN.
 

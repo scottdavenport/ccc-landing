@@ -40,14 +40,29 @@ npm run dev
 
 ## Environment Configuration
 
-This project uses Supabase for its backend. You'll need to set up the following environment variables in a `.env.local` file:
+This project uses Supabase for its backend and Cloudinary for image management. You'll need to set up the following environment variables in a `.env.local` file:
 
 ```sh
 VITE_SUPABASE_URL=your-project-url
 VITE_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
+NEXT_PUBLIC_CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 ```
 
-You can find these values in your Supabase project settings. The admin dashboard includes an interactive connection status indicator to help verify your Supabase configuration.
+You can find the Supabase values in your Supabase project settings and the Cloudinary values in your Cloudinary dashboard. The admin dashboard includes interactive status indicators to help verify both your Supabase and Cloudinary configurations.
+
+## Development
+
+To ensure a smooth development experience, we've added a `dev:safe` script that:
+1. Checks for and kills any existing processes on ports 3000-3002
+2. Runs the build to catch any type errors
+3. Starts the development server if build succeeds
+
+Use this command instead of the regular `dev` script:
+```sh
+npm run dev:safe
+```
 
 ### Admin Access
 
