@@ -93,8 +93,6 @@ export default function PhotoUploadModal({ isOpen, onClose, onUploadComplete }: 
           public_id: result.public_id,
           secure_url: result.secure_url
         };
-
-        return promise;
       } catch (error) {
         console.error('Upload failed:', error);
         toast.error(`Failed to upload ${file.name}`);
