@@ -8,6 +8,9 @@
 - Fixed admin authentication by storing and checking roles in Supabase user metadata
 - Improved auth state management and role checking in AuthContext
 - Added automatic logout for non-admin users attempting to access admin pages
+- Fixed Cloudinary integration to work in both development and Edge environments
+- Improved Cloudinary API authentication and error handling
+- Added proper Next.js configuration for Edge compatibility
 
 
 ## [Unreleased]
