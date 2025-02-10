@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
 
 // Set runtime config
 export const runtime = 'edge';
 
-// Configure Cloudinary
-const cloudinaryConfig = {
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '',
-  api_key: process.env.CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || ''
-};
-
-cloudinary.config(cloudinaryConfig);
+// Helper function to generate SHA-1 signature
+async function sha1(str: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hash = await crypto.subtle.digest('SHA-1', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Convert File to buffer
     // Convert file to base64
     const bytes = await file.arrayBuffer();
-    const base64 = Buffer.from(bytes).toString('base64');
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
     const dataURI = `data:${file.type};base64,${base64}`;
 
     // Get transformation options from form data
@@ -36,25 +36,21 @@ export async function POST(request: NextRequest) {
     const width = formData.get('width');
     const height = formData.get('height');
 
-    // Build upload options
-    const uploadOptions: any = {
-      resource_type: 'auto',
+    // Build upload params
+    const params: Record<string, string> = {
       folder: 'sponsors',
-      unique_filename: true,
-      overwrite: true
+      unique_filename: 'true',
+      overwrite: 'true'
     };
 
     // Add transformation options if present
-    if (angle) {
-      uploadOptions.angle = angle;
-    }
-
+    if (angle) params.angle = angle.toString();
     if (crop && x && y && width && height) {
-      uploadOptions.crop = 'crop';
-      uploadOptions.x = x;
-      uploadOptions.y = y;
-      uploadOptions.width = width;
-      uploadOptions.height = height;
+      params.crop = 'crop';
+      params.x = x.toString();
+      params.y = y.toString();
+      params.width = width.toString();
+      params.height = height.toString();
     }
 
     // Verify Cloudinary configuration
@@ -72,27 +68,31 @@ export async function POST(request: NextRequest) {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
 
-    // Upload to Cloudinary using fetch
-    const timestamp = Math.round((new Date()).getTime() / 1000);
-    const signature = cloudinary.utils.api_sign_request(
-      { timestamp, ...uploadOptions },
-      cloudinaryConfig.api_secret
-    );
+    // Generate signature
+    const timestamp = Math.round(Date.now() / 1000).toString();
+    const paramsToSign = { ...params, timestamp };
+    const signaturePayload = Object.entries(paramsToSign)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&') + apiSecret;
 
+    const signature = await sha1(signaturePayload);
+
+    // Prepare form data
     const formDataToSend = new FormData();
     formDataToSend.append('file', dataURI);
-    formDataToSend.append('timestamp', timestamp.toString());
+    formDataToSend.append('api_key', apiKey);
+    formDataToSend.append('timestamp', timestamp);
     formDataToSend.append('signature', signature);
-    formDataToSend.append('api_key', cloudinaryConfig.api_key);
-    
-    Object.entries(uploadOptions).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formDataToSend.append(key, value.toString());
-      }
+
+    // Add all params to form data
+    Object.entries(params).forEach(([key, value]) => {
+      formDataToSend.append(key, value);
     });
 
+    // Upload to Cloudinary
     const uploadResponse = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloud_name}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
       {
         method: 'POST',
         body: formDataToSend
@@ -100,7 +100,8 @@ export async function POST(request: NextRequest) {
     );
 
     if (!uploadResponse.ok) {
-      throw new Error('Failed to upload to Cloudinary');
+      const error = await uploadResponse.json();
+      throw new Error(error.message || 'Failed to upload to Cloudinary');
     }
 
     const result = await uploadResponse.json();
