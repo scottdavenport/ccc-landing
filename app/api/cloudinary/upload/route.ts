@@ -1,17 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { configureCloudinary, cloudinaryEdgeApi, isEdgeRuntime } from '../config';
 
-// Set runtime config
 export const runtime = 'edge';
-
-// Helper function to generate SHA-1 signature
-async function sha1(str: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(str);
-  const hash = await crypto.subtle.digest('SHA-1', data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +12,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Convert File to buffer
     // Convert file to base64
     const bytes = await file.arrayBuffer();
     const uint8Array = new Uint8Array(bytes);
@@ -58,63 +47,48 @@ export async function POST(request: NextRequest) {
       params.height = height.toString();
     }
 
-    // Verify Cloudinary configuration
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-    if (!cloudName || !apiKey || !apiSecret) {
-      const missingVars = [
-        !cloudName && 'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME',
-        !apiKey && 'CLOUDINARY_API_KEY',
-        !apiSecret && 'CLOUDINARY_API_SECRET'
-      ].filter(Boolean);
-
-      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
-    }
-
-    // Generate signature
-    const timestamp = Math.round(Date.now() / 1000).toString();
-    const paramsToSign = { ...params, timestamp };
-    const signaturePayload = Object.entries(paramsToSign)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, value]) => `${key}=${value}`)
-      .join('&') + apiSecret;
-
-    const signature = await sha1(signaturePayload);
-
     // Prepare form data
     const formDataToSend = new FormData();
     formDataToSend.append('file', dataURI);
-    formDataToSend.append('api_key', apiKey);
-    formDataToSend.append('timestamp', timestamp);
-    formDataToSend.append('signature', signature);
-
-    // Add all params to form data
     Object.entries(params).forEach(([key, value]) => {
       formDataToSend.append(key, value);
     });
 
-    // Upload to Cloudinary
-    const uploadResponse = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      {
+    let result;
+
+    if (isEdgeRuntime) {
+      // Use direct API calls in Edge Runtime
+      result = await cloudinaryEdgeApi('/image/upload', {
         method: 'POST',
         body: formDataToSend
+      });
+    } else {
+      // Use SDK in development
+      const cloudinary = configureCloudinary();
+      if (!cloudinary) {
+        throw new Error('Failed to configure Cloudinary');
       }
-    );
+      
+      result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { ...params },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
 
-    if (!uploadResponse.ok) {
-      const error = await uploadResponse.json();
-      throw new Error(error.message || 'Failed to upload to Cloudinary');
+        // Convert base64 to buffer and pipe to upload stream
+        const buffer = Buffer.from(base64, 'base64');
+        uploadStream.end(buffer);
+      });
     }
 
-    const result = await uploadResponse.json();
     return NextResponse.json(result);
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload image' },
+      { error: error instanceof Error ? error.message : 'Failed to upload image' },
       { status: 500 }
     );
   }
