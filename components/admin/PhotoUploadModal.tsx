@@ -63,8 +63,6 @@ export default function PhotoUploadModal({ isOpen, onClose, onUploadComplete }: 
       try {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', 'sponsors');
-        formData.append('api_key', process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || '');
 
         // Add image transformations if they exist
         const transform = imageTransforms[file.name];
@@ -81,35 +79,20 @@ export default function PhotoUploadModal({ isOpen, onClose, onUploadComplete }: 
           }
         }
 
-        const xhr = new XMLHttpRequest();
-        const promise = new Promise<{ public_id: string; secure_url: string }>((resolve, reject) => {
-          xhr.upload.addEventListener('progress', (event) => {
-            if (event.lengthComputable) {
-              const stats = calculateUploadStats(event.loaded, event.total, uploadStartTime);
-              setUploadProgress((prev) => ({
-                ...prev,
-                [file.name]: stats
-              }));
-            }
-          });
-
-          xhr.onload = () => {
-            if (xhr.status === 200) {
-              const response = JSON.parse(xhr.responseText);
-              resolve({
-                public_id: response.public_id,
-                secure_url: response.secure_url
-              });
-            } else {
-              reject(new Error('Upload failed'));
-            }
-          };
-
-          xhr.onerror = () => reject(new Error('Upload failed'));
+        const response = await fetch('/api/cloudinary/upload', {
+          method: 'POST',
+          body: formData
         });
 
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`);
-        xhr.send(formData);
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const result = await response.json();
+        return {
+          public_id: result.public_id,
+          secure_url: result.secure_url
+        };
 
         return promise;
       } catch (error) {
