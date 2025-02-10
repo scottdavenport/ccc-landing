@@ -1,5 +1,3 @@
-import { v2 as cloudinary } from 'cloudinary';
-
 // Helper function to generate SHA-1 signature for Edge Runtime
 async function sha1(str: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -10,23 +8,23 @@ async function sha1(str: string): Promise<string> {
     .join('');
 }
 
-// Configure Cloudinary for local development
-export function configureCloudinary() {
-  if (process.env.NODE_ENV === 'development') {
-    cloudinary.config({
-      cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '',
-      api_key: process.env.CLOUDINARY_API_KEY || '',
-      api_secret: process.env.CLOUDINARY_API_SECRET || ''
-    });
-    return cloudinary;
-  }
-  return null;
+// Generate Cloudinary API signature for Edge Runtime
+async function generateSignature(params: Record<string, string>): Promise<string> {
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  if (!apiSecret) throw new Error('Missing Cloudinary API secret');
+
+  const sortedKeys = Object.keys(params).sort();
+  const signatureString = sortedKeys
+    .map(key => `${key}=${params[key]}`)
+    .join('&') + apiSecret;
+
+  return sha1(signatureString);
 }
 
-// Direct API call for Edge Runtime (production/preview)
+// Direct API call for Edge Runtime
 export async function cloudinaryEdgeApi(path: string, options: {
   method?: string;
-  body?: FormData;
+  body?: any;
   headers?: Record<string, string>;
 }) {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -43,46 +41,53 @@ export async function cloudinaryEdgeApi(path: string, options: {
   }
 
   const timestamp = Math.round(Date.now() / 1000).toString();
-  let signaturePayload = `timestamp=${timestamp}`;
+  const params: Record<string, string> = {
+    timestamp,
+    ...((typeof options.body === 'object' && options.body !== null) ? options.body : {})
+  };
 
-  if (options.body instanceof FormData) {
-    const params: Record<string, string> = {};
-    options.body.forEach((value, key) => {
-      if (typeof value === 'string') {
-        params[key] = value;
-      }
-    });
-    signaturePayload = Object.entries(params)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, value]) => `${key}=${value}`)
-      .join('&') + apiSecret;
-  } else {
-    signaturePayload += apiSecret;
-  }
+  const signature = await generateSignature(params);
+  const queryString = new URLSearchParams({
+    ...params,
+    api_key: apiKey,
+    signature
+  }).toString();
 
-  const signature = await sha1(signaturePayload);
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}${path}${path.includes('?') ? '&' : '?'}${queryString}`;
+
   const headers = {
-    'Authorization': `Basic ${btoa(`${apiKey}:${signature}`)}`,
-    'X-Timestamp': timestamp,
+    'Content-Type': 'application/json',
     ...options.headers
   };
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}${path}`,
-    {
-      method: options.method || 'GET',
-      headers,
-      body: options.body
-    }
-  );
+  const response = await fetch(url, {
+    method: options.method || 'GET',
+    headers,
+    ...(options.body && { body: JSON.stringify(options.body) })
+  });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to make Cloudinary API request');
+    const error = await response.json().catch(() => ({ message: 'Failed to parse error response' }));
+    throw new Error(error.message || `Failed to make Cloudinary API request: ${response.status}`);
   }
 
   return response.json();
 }
 
-// Re-install cloudinary package for local development
-export const isEdgeRuntime = process.env.NEXT_RUNTIME === 'edge';
+// Helper function to validate Cloudinary credentials
+function validateCredentials() {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    const missing = [
+      !cloudName && 'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME',
+      !apiKey && 'CLOUDINARY_API_KEY',
+      !apiSecret && 'CLOUDINARY_API_SECRET'
+    ].filter(Boolean);
+    throw new Error(`Missing Cloudinary credentials: ${missing.join(', ')}`);
+  }
+
+  return { cloudName, apiKey, apiSecret };
+}

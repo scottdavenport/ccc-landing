@@ -1,24 +1,14 @@
 import { NextResponse } from 'next/server';
-import { configureCloudinary, cloudinaryEdgeApi, isEdgeRuntime } from '../config';
-
-export const runtime = 'edge';
+import { cloudinaryApi } from '@/lib/cloudinary/config';
 
 export async function GET() {
   try {
-    let result;
+    const result = await cloudinaryApi('/ping', {
+      method: 'GET'
+    });
 
-    if (isEdgeRuntime) {
-      // Use direct API calls in Edge Runtime
-      result = await cloudinaryEdgeApi('/ping', {
-        method: 'GET'
-      });
-    } else {
-      // Use SDK in development
-      const cloudinary = configureCloudinary();
-      if (!cloudinary) {
-        throw new Error('Failed to configure Cloudinary');
-      }
-      result = await cloudinary.api.ping();
+    if (!result) {
+      throw new Error('No response from Cloudinary');
     }
 
     return NextResponse.json({

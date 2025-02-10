@@ -16,7 +16,7 @@ export interface CloudinaryResource {
 
 export const fetchCloudinaryImages = async (): Promise<CloudinaryResource[]> => {
   try {
-    const response = await fetch('/api/cloudinary', {
+    const response = await fetch('/api/cloudinary/search', {
       cache: 'no-store',
       method: 'POST',
       headers: {

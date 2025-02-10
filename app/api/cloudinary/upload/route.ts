@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Use SDK in development
-      const cloudinary = configureCloudinary();
+      const cloudinary = await configureCloudinary();
       if (!cloudinary) {
         throw new Error('Failed to configure Cloudinary');
       }
