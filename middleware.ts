@@ -65,9 +65,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all admin routes including subpages
-     */
     '/admin/:path*',
-  ],
+    '/api/cloudinary/:path*',
+    '/login',
+    '/logout'
+  ]
 };
