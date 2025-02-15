@@ -49,6 +49,15 @@ export async function POST(request: NextRequest) {
         {
           folder: 'sponsors',
           resource_type: 'image',
+          // Use sponsor name for better identification
+          public_id: `${metadata.category}/${metadata.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${metadata.year}`,
+          display_name: `${metadata.name} (${metadata.year})`,
+          // Optimize image on upload
+          transformation: [
+            { width: 500, height: 375, crop: 'fill', quality: 'auto' },
+            { width: 300, height: 300, crop: 'fill', quality: 'auto' }
+          ],
+          format: 'auto',
           // Add metadata as Cloudinary context
           context: {
             category: metadata.category,
