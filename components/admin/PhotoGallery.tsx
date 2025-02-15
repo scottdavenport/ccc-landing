@@ -214,7 +214,7 @@ export default function PhotoGallery() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {resources.map((resource) => (
           <div 
             key={resource.public_id} 
@@ -223,25 +223,28 @@ export default function PhotoGallery() {
               selectedImages.has(resource.public_id) && "bg-blue-50"
             )}
           >
-            <div className="relative aspect-square mb-2 group">
+            <div className="relative aspect-square mb-2 group h-[150px]">
               <Image
                 src={resource.secure_url}
                 alt={resource.public_id}
                 fill
-                className="object-contain rounded-lg"
+                className="object-cover rounded-lg"
+                sizes="150px"
+                unoptimized
+                loading="lazy"
               />
               <button
                 onClick={() => toggleImageSelection(resource.public_id)}
-                className="absolute top-2 right-2 p-1 rounded-md bg-white/80 hover:bg-white shadow-sm"
+                className="absolute top-1 right-1 p-0.5 rounded-md bg-white/80 hover:bg-white shadow-sm"
               >
                 {selectedImages.has(resource.public_id) ? (
-                  <CheckSquare className="h-5 w-5 text-blue-600" />
+                  <CheckSquare className="h-4 w-4 text-blue-600" />
                 ) : (
-                  <Square className="h-5 w-5 text-gray-400" />
+                  <Square className="h-4 w-4 text-gray-400" />
                 )}
               </button>
             </div>
-            <div className="text-sm space-y-2">
+            <div className="text-xs space-y-1">
               <div>
                 <p className="font-semibold truncate">{resource.public_id}</p>
                 <p className="text-gray-500">{new Date(resource.created_at).toLocaleDateString()}</p>
