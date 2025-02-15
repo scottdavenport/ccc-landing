@@ -1,0 +1,15 @@
+{
+  "source": {
+    "include": ["components", "app"],
+    "includePattern": ".+\\.(jsx|js|ts|tsx)$",
+    "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "opts": {
+    "destination": "./docs",
+    "recurse": true
+  },
+  "tags": {
+    "allowUnknownTags": ["component"]
+  },
+  "plugins": ["node_modules/jsdoc/plugins/markdown"]
+}

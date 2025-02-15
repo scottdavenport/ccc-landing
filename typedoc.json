@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["./components/**/*.tsx", "./app/**/*.tsx"],
+  "out": "docs",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "theme": "default",
+  "name": "CCC Landing Page Documentation"
+}

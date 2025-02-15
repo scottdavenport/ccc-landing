@@ -1,49 +1,80 @@
-// Hey there! 👋 This tells Next.js we want to use special features like clicking and loading things
 'use client';
 
-// First, let's get our tools - like getting crayons and paper before drawing
-import { useEffect, useState } from 'react';  // These help us remember things and do things when the page loads
-import Image from 'next/image';                // This helps us show pictures nicely
-import { CloudinaryResource } from '@/lib/cloudinary';  // This helps us talk to our photo storage
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { CloudinaryResource } from '@/lib/cloudinary';
 
-// This is like a recipe card that tells us what a folder should look like
+/**
+ * Represents a folder in the Cloudinary storage system
+ * 
+ * @example
+ * ```typescript
+ * const folder: CloudinaryFolder = {
+ *   name: "sponsors",
+ *   path: "sponsors/2024"
+ * };
+ * ```
+ */
 interface CloudinaryFolder {
-  name: string;  // The name of the folder (like "Vacation Photos")
-  path: string;  // Where to find the folder (like "in the bottom drawer")
+  /** The display name of the folder */
+  name: string;
+  /** The full path to the folder in Cloudinary */
+  path: string;
 }
 
-// This is our photo gallery - like a digital photo album!
+/**
+ * A dynamic photo gallery component that displays images from Cloudinary.
+ * Handles loading states, errors, and displays both images and folder structure.
+ * 
+ * @remarks
+ * This component automatically fetches and displays images from Cloudinary when mounted.
+ * It supports error handling and loading states for a better user experience.
+ * 
+ * @example
+ * ```tsx
+ * // In a parent component
+ * function AdminDashboard() {
+ *   return (
+ *     <div>
+ *       <h1>Photo Management</h1>
+ *       <PhotoGallery />
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
 export default function PhotoGallery() {
-  // These are like sticky notes that help us remember things:
-  const [resources, setResources] = useState<any[]>([]);        // List of all our photos
-  const [folders, setFolders] = useState<CloudinaryFolder[]>([]);  // List of our photo folders
-  const [loading, setLoading] = useState(true);                    // Are we still getting the photos?
-  const [error, setError] = useState<string | null>(null);         // Did something go wrong?
+  /** All photos retrieved from Cloudinary */
+  const [resources, setResources] = useState<any[]>([]);
+  /** Available folders in Cloudinary */
+  const [folders, setFolders] = useState<CloudinaryFolder[]>([]);
+  /** Loading state for async operations */
+  const [loading, setLoading] = useState(true);
+  /** Error message if something goes wrong */
+  const [error, setError] = useState<string | null>(null);
 
-  // When our page first opens, we want to get all our photos
-  // It's like opening your photo album when you first sit down to look at it
   useEffect(() => {
-    // This is our helper that goes and gets all our photos
+    /**
+     * Fetches resources and folders from Cloudinary
+     * 
+     * @throws Will throw an error if the API request fails
+     * @returns A Promise that resolves when resources are fetched
+     * 
+     * @internal
+     */
     const fetchResources = async () => {
       try {
-        // First, let's ask our photo storage for all our pictures
-        // It's like asking "Can I see all the photos we have?"
         const listResponse = await fetch('/api/cloudinary/list-resources');
         if (!listResponse.ok) throw new Error('Failed to list resources');
         
-        // Turn the response into something we can use
         const data = await listResponse.json();
-        // Let's see what we got back (this helps us fix problems)
         console.log('Cloudinary Data:', data);
         
-        // Save our photos and folders in our sticky notes
-        setResources(data.resources || []);  // All our photos
-        setFolders(data.folders || []);      // All our folders
-        setError(null);                      // Clear any errors
+        setResources(data.resources || []);
+        setFolders(data.folders || []);
+        setError(null);
       } catch (error) {
-        // Uh oh! Something went wrong!
         console.error('Error:', error);
-        // Let's make a note of what went wrong
         setError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         // We're done loading, whether it worked or not

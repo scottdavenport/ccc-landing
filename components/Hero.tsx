@@ -1,11 +1,74 @@
-// Hi! 👋 This tells Next.js we want to use special features like animations
 'use client';
 
-// Import our magical animation tool and navigation menu ✨
-import { motion } from 'framer-motion';  // This makes things move smoothly
-import { Navigation } from './Navigation';  // This is our menu at the top
+import { motion } from 'framer-motion';
+import { Navigation } from './Navigation';
 
-// This is our hero section - it's like the cover of a book! 📖
+/**
+ * Animation configuration for the hero section elements
+ */
+const animations = {
+  /** Logo animation settings */
+  logo: {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 1, ease: "easeOut" }
+  },
+  /** Content animation settings */
+  content: {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.8, delay: 0.3, ease: "easeOut" }
+  },
+  /** Donate button animation settings */
+  button: {
+    initial: { opacity: 0, scale: 0.95 },
+    animate: { opacity: 1, scale: 1 },
+    transition: { duration: 0.5, delay: 0.6 },
+    hover: { 
+      scale: 1.02,
+      transition: { duration: 0.2 }
+    },
+    tap: { scale: 0.98 }
+  },
+  /** Bouncing arrow animation settings */
+  arrow: {
+    initial: { opacity: 0, y: -10 },
+    animate: { opacity: 1, y: 10 },
+    transition: {
+      repeat: Infinity,
+      repeatType: "reverse" as const,  // Type assertion to fix TypeScript error
+      duration: 1.5,
+      ease: "easeInOut"
+    }
+  }
+};
+
+/**
+ * The hero section component for the landing page
+ * 
+ * @remarks
+ * This component creates an animated hero section with:
+ * - A full-screen gradient background
+ * - Navigation menu
+ * - Animated logo
+ * - Mission statement
+ * - Call-to-action button
+ * - Bouncing scroll indicator
+ * 
+ * All animations are handled by Framer Motion for smooth, performant transitions.
+ * 
+ * @example
+ * ```tsx
+ * function LandingPage() {
+ *   return (
+ *     <main>
+ *       <Hero />
+ *       <OtherContent />
+ *     </main>
+ *   );
+ * }
+ * ```
+ */
 export const Hero = () => {
   return (
     // This is our main section - it takes up the whole screen and has pretty colors
@@ -20,11 +83,9 @@ export const Hero = () => {
       {/* This container holds all our main content */}
       <div className="container relative z-10 mx-auto px-4 py-20">
         <div className="flex flex-col items-center justify-center space-y-16 max-w-5xl mx-auto">
-          {/* Our logo appears with a fade-in animation 🌟 */}
+          {/* Animated logo */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}      // Start invisible and below
-            animate={{ opacity: 1, y: 0 }}       // Fade in and move up
-            transition={{ duration: 1, ease: "easeOut" }}  // Smooth animation
+            {...animations.logo}
             className="w-full max-w-lg mx-auto"
           >
             <img 
@@ -34,11 +95,9 @@ export const Hero = () => {
             />
           </motion.div>
 
-          {/* Our main message and donate button 💰 */}
+          {/* Animated content section */}
           <motion.div 
-            initial={{ opacity: 0, y: 30 }}      // Start invisible and below
-            animate={{ opacity: 1, y: 0 }}       // Fade in and move up
-            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}  // Smooth animation after logo
+            {...animations.content}
             className="text-center space-y-8"
           >
             {/* Our mission statement */}
@@ -46,16 +105,13 @@ export const Hero = () => {
               Join us in our mission to support cancer patients through the power of golf
             </p>
             
-            {/* A magical donate button that grows when you hover! ✨ */}
+            {/* Animated call-to-action button */}
             <motion.button
-              initial={{ opacity: 0, scale: 0.95 }}  // Start invisible and slightly smaller
-              animate={{ opacity: 1, scale: 1 }}     // Fade in and grow to normal size
-              transition={{ duration: 0.5, delay: 0.6 }}  // Smooth animation after text
-              whileHover={{ 
-                scale: 1.02,                        // Grow a little when hovered
-                transition: { duration: 0.2 }       // Quick growth animation
-              }}
-              whileTap={{ scale: 0.98 }}            // Shrink slightly when clicked
+              initial={animations.button.initial}
+              animate={animations.button.animate}
+              transition={animations.button.transition}
+              whileHover={animations.button.hover}
+              whileTap={animations.button.tap}
               className="mt-8 bg-white hover:bg-ccc-gray-light text-ccc-teal-dark text-xl px-16 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 uppercase tracking-wider font-bold ring-1 ring-white/10"
             >
               Donate Now
@@ -63,19 +119,9 @@ export const Hero = () => {
           </motion.div>
         </div>
 
-        {/* A fun bouncing arrow that tells people to scroll down! ⬇️ */}
+        {/* Animated scroll indicator */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}         // Start invisible and up
-          animate={{ 
-            opacity: 1,                           // Fade in
-            y: 10                                 // Move down
-          }}
-          transition={{
-            repeat: Infinity,                     // Keep bouncing forever
-            repeatType: "reverse",                // Bounce up and down
-            duration: 1.5,                       // Take 1.5 seconds per bounce
-            ease: "easeInOut"                    // Smooth bouncing motion
-          }}
+          {...animations.arrow}
           className="fixed bottom-0 left-1/2 transform -translate-x-1/2"
         >
           {/* This is our arrow shape */}
