@@ -1,0 +1,81 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { v2 as cloudinary } from 'cloudinary';
+import { SponsorMetadata } from '@/types/sponsor';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+/**
+ * Handles sponsor image uploads with metadata
+ * 
+ * @param request - The incoming request containing the image file and metadata
+ * @returns Response with the upload result
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const metadataStr = formData.get('metadata') as string;
+    
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No file provided' },
+        { status: 400 }
+      );
+    }
+
+    // Parse and validate metadata
+    let metadata: SponsorMetadata;
+    try {
+      metadata = JSON.parse(metadataStr);
+    } catch (e) {
+      return NextResponse.json(
+        { error: 'Invalid metadata format' },
+        { status: 400 }
+      );
+    }
+
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Upload to Cloudinary with metadata
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'sponsors',
+          resource_type: 'image',
+          // Add metadata as Cloudinary context
+          context: {
+            category: metadata.category,
+            name: metadata.name,
+            year: metadata.year.toString(),
+            website: metadata.website || '',
+          },
+          // Add tags for easier filtering
+          tags: [metadata.category, `year_${metadata.year}`],
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      // Write buffer to stream
+      const bufferStream = require('stream').Readable.from(buffer);
+      bufferStream.pipe(uploadStream);
+    });
+
+    return NextResponse.json(uploadResult);
+  } catch (error) {
+    console.error('Upload error:', error);
+    return NextResponse.json(
+      { error: 'Failed to upload image' },
+      { status: 500 }
+    );
+  }
+}
