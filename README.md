@@ -54,7 +54,9 @@ The project uses Cloudinary for efficient image management. Here's how it works:
 
 ### Admin Dashboard
 - Access the admin dashboard at `/admin`
-- Use the photo upload widget to add new sponsor logos
+- Use the modern modal dialog to upload sponsor logos
+- Preview uploaded images with optimized display
+- Manage sponsor metadata and information
 - View all uploaded images with detailed information
 - Images are automatically optimized by Cloudinary
 

@@ -32,21 +32,24 @@ Implemented a **streamlined, modern image upload experience** for the **Craven C
 ---
 
 ## 🖥️ UI & User Flow
-1. ✅ **User clicks the "Upload Photos" button.**
-2. ✅ **Cloudinary widget opens with multiple upload options.**
-3. ✅ **User selects or drags files using Cloudinary's interface.**
-4. ✅ **Progress tracking and preview handled by Cloudinary.**
-5. ✅ **Images are automatically optimized and stored.**
-6. ✅ **Gallery updates to show the new images.**
+1. ✅ **User clicks the "Upload Sponsor Logo" button**
+2. ✅ **Modern modal dialog opens with smooth animation**
+3. ✅ **User clicks "Choose Image" to open Cloudinary widget**
+4. ✅ **User selects or drags files using Cloudinary's interface**
+5. ✅ **Real-time preview appears in the modal**
+6. ✅ **Images are automatically optimized and stored**
+7. ✅ **Gallery updates to show the new sponsor logo**
 
 ---
 
 ## ⚠️ Admin Features
+- ✅ **Modern Modal Interface**: Sleek, responsive dialog for sponsor uploads
 - ✅ **Streamlined Upload Process**: One-click access to professional upload interface
 - ✅ **Built-in Image Management**: Powered by Cloudinary's widget
+- ✅ **Real-time Preview**: Instant visual feedback of uploaded logos
 - ✅ **Automatic Optimization**: Images are automatically processed for optimal delivery
-- **Metadata support**: Store additional details such as uploader name, date, and category.
-- **Automatic image optimization**: Serve optimized images via Cloudinary’s CDN.
+- ✅ **Metadata Support**: Store additional details such as uploader name, date, and category
+- ✅ **CDN Integration**: Serve optimized images via Cloudinary's global CDN’s CDN.
 
 ---
 
