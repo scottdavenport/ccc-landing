@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SponsorUpload } from "./SponsorUpload";
 import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
  * A dialog component that contains the sponsor management form
@@ -24,14 +25,27 @@ export function SponsorDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button
+          variant="default"
+          size="default"
+          className={cn(
+            "font-semibold tracking-tight",
+            "bg-primary/90 hover:bg-primary text-white",
+            "shadow-sm hover:shadow transition-all duration-200"
+          )}
+        >
           Add Sponsor
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent 
+        className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto"
+        aria-describedby="sponsor-form-description"
+      >
         <DialogHeader>
           <DialogTitle>Add New Sponsor</DialogTitle>
+          <p id="sponsor-form-description" className="text-sm text-gray-500">
+            Fill out the form below to add a new sponsor to the website.
+          </p>
         </DialogHeader>
         <SponsorUpload />
       </DialogContent>

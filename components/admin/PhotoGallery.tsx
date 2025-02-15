@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { SponsorDialog } from './SponsorDialog';
 
 /**
  * Represents a folder in the Cloudinary storage system
@@ -174,15 +175,20 @@ export default function PhotoGallery() {
   // If something went wrong, show the error in red
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
-  // Now let's show our photo gallery!
+  // Now let's show our sponsor logos!
   return (
     <div className="space-y-8">
       {/* This is our debug section - it helps us see what's happening behind the scenes */}
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h2 className="text-2xl font-bold">Photo Gallery</h2>
-          <p className="text-gray-600">{resources.length} images available</p>
+      <div className="space-y-4">
+          <SponsorDialog />
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Sponsor Logos</h2>
+            <p className="text-gray-600">{resources.length} logos</p>
+          </div>
         </div>
+        <hr className="border-t border-gray-300 shadow-sm" />
+
         {selectedImages.size > 0 && (
           <AlertDialog>
             <AlertDialogTrigger asChild>

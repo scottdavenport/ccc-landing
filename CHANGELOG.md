@@ -11,6 +11,8 @@ All notable changes to the Craven Cancer Classic website will be documented in t
   * Improved photo upload widget with auto-refresh
   * Added optimized thumbnail generation and display
   * Improved grid layout for better thumbnail presentation
+  * Added single-file upload restriction for sponsor logos
+  * Improved sponsor metadata handling with optional website field
 
 ### Changed
 - Simplified application architecture
