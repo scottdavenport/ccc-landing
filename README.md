@@ -58,7 +58,12 @@ The project uses Cloudinary for efficient image management. Here's how it works:
 - Preview uploaded images with optimized display
 - Manage sponsor metadata and information
 - View all uploaded images with detailed information
+- Select and delete multiple images with confirmation
 - Images are automatically optimized by Cloudinary
+
+### Documentation
+- Comprehensive JSDoc documentation available in the `docs/` directory
+- Detailed TypeScript types and interfaces
 
 ### Cloudinary Setup
 1. Create a Cloudinary account
