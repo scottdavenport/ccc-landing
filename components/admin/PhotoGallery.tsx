@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { CloudinaryResource } from '@/lib/cloudinary';
-import { Trash2 } from 'lucide-react';
+import { Trash2, CheckSquare, Square } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 /**
  * Represents a folder in the Cloudinary storage system
@@ -67,13 +68,15 @@ export default function PhotoGallery() {
   const [error, setError] = useState<string | null>(null);
   /** Loading state for delete operation */
   const [deleteLoading, setDeleteLoading] = useState(false);
+  /** Selected image IDs for bulk deletion */
+  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
 
   /**
-   * Handles the deletion of an image from Cloudinary
+   * Handles the deletion of one or more images from Cloudinary
    * 
-   * @param publicId - The public ID of the image to delete
+   * @param publicIds - The public ID(s) of the image(s) to delete
    */
-  const handleDelete = async (publicId: string) => {
+  const handleDelete = async (publicIds: string | string[]) => {
     setDeleteLoading(true);
     try {
       const response = await fetch('/api/cloudinary/delete', {
@@ -81,21 +84,56 @@ export default function PhotoGallery() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ publicId }),
+        body: JSON.stringify({ publicIds }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to delete image');
+        throw new Error(data.error || 'Failed to delete image(s)');
       }
 
-      // Remove the deleted image from the resources state
-      setResources((prev) => prev.filter((resource) => resource.public_id !== publicId));
+      // Remove the deleted images from the resources state
+      const idsToRemove = Array.isArray(publicIds) ? publicIds : [publicIds];
+      setResources((prev) => 
+        prev.filter((resource) => !idsToRemove.includes(resource.public_id))
+      );
+      
+      // Clear selected images after successful bulk delete
+      if (Array.isArray(publicIds)) {
+        setSelectedImages(new Set());
+      }
     } catch (error) {
-      console.error('Error deleting image:', error);
-      setError(error instanceof Error ? error.message : 'Failed to delete image');
+      console.error('Error deleting image(s):', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete image(s)');
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  /**
+   * Toggles the selection state of an image
+   * 
+   * @param publicId - The public ID of the image to toggle
+   */
+  const toggleImageSelection = (publicId: string) => {
+    setSelectedImages((prev) => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(publicId)) {
+        newSelection.delete(publicId);
+      } else {
+        newSelection.add(publicId);
+      }
+      return newSelection;
+    });
+  };
+
+  /**
+   * Handles bulk deletion of selected images
+   */
+  const handleBulkDelete = () => {
+    const selectedIds = Array.from(selectedImages);
+    handleDelete(selectedIds);
   };
 
   useEffect(() => {
@@ -140,24 +178,68 @@ export default function PhotoGallery() {
   return (
     <div className="space-y-8">
       {/* This is our debug section - it helps us see what's happening behind the scenes */}
-      <div className="bg-gray-100 p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">Debug Information:</h3>
-        <div className="space-y-2">
-          <p>Found {resources.length} resources</p>
-          <p>Available folders: {folders.map(f => f.name).join(', ') || 'None'}</p>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-2xl font-bold">Photo Gallery</h2>
+          <p className="text-gray-600">{resources.length} images available</p>
         </div>
+        {selectedImages.size > 0 && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="lg">
+                <Trash2 className="h-5 w-5 mr-2" />
+                Delete ({selectedImages.size})
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete {selectedImages.size} images?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete
+                  {selectedImages.size === 1 ? ' this image ' : ' these images '}
+                  from Cloudinary.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleBulkDelete}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Delete {selectedImages.size} images
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {resources.map((resource) => (
-          <div key={resource.public_id} className="bg-white p-4 rounded-lg shadow">
-            <div className="relative aspect-square mb-2">
+          <div 
+            key={resource.public_id} 
+            className={cn(
+              "bg-white p-4 rounded-lg shadow transition-colors",
+              selectedImages.has(resource.public_id) && "bg-blue-50"
+            )}
+          >
+            <div className="relative aspect-square mb-2 group">
               <Image
                 src={resource.secure_url}
                 alt={resource.public_id}
                 fill
                 className="object-contain rounded-lg"
               />
+              <button
+                onClick={() => toggleImageSelection(resource.public_id)}
+                className="absolute top-2 right-2 p-1 rounded-md bg-white/80 hover:bg-white shadow-sm"
+              >
+                {selectedImages.has(resource.public_id) ? (
+                  <CheckSquare className="h-5 w-5 text-blue-600" />
+                ) : (
+                  <Square className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
             </div>
             <div className="text-sm space-y-2">
               <div>
