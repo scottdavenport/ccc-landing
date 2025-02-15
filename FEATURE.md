@@ -18,6 +18,10 @@ Implemented a **streamlined, modern image upload experience** for the **Craven C
   Works flawlessly on both mobile and desktop.
 - ✅ **⚡ Performance Optimized**  
   Lightweight implementation with minimal custom code.
+- ✅ **🔒 Single File Upload**  
+  One logo per sponsor for better organization.
+- ✅ **📝 Flexible Metadata**  
+  Optional website field and improved sponsor level handling.
 
 ---
 
@@ -32,13 +36,13 @@ Implemented a **streamlined, modern image upload experience** for the **Craven C
 ---
 
 ## 🖥️ UI & User Flow
-1. ✅ **User clicks the "Upload Sponsor Logo" button**
-2. ✅ **Modern modal dialog opens with smooth animation**
-3. ✅ **User clicks "Choose Image" to open Cloudinary widget**
-4. ✅ **User selects or drags files using Cloudinary's interface**
-5. ✅ **Real-time preview appears in the modal**
-6. ✅ **Images are automatically optimized and stored**
-7. ✅ **Gallery updates to show the new sponsor logo**
+1. ✅ **User clicks "Add Sponsor" button**
+2. ✅ **Modern modal dialog opens with form fields**
+3. ✅ **User enters sponsor details (name, level, year, optional website)**
+4. ✅ **User selects a single logo file with preview**
+5. ✅ **Logo is automatically optimized and stored**
+6. ✅ **Gallery updates to show the new sponsor logo**
+7. ✅ **Cloudinary display name shows full sponsor context**
 
 ---
 
