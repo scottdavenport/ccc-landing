@@ -41,6 +41,26 @@ Implemented a **streamlined, modern image upload experience** for the **Craven C
 
 ---
 
+## 🗑️ Image Management Features
+
+### Key Capabilities
+- ✅ **Bulk Selection**: Select multiple images for batch operations
+- ✅ **Visual Feedback**: Selected images highlighted with blue background
+- ✅ **Safety First**: Confirmation dialogs prevent accidental deletions
+- ✅ **Batch Operations**: Delete multiple images in one action
+- ✅ **Status Tracking**: Clear loading states during operations
+- ✅ **Error Handling**: Graceful handling of failed operations
+
+### Technical Implementation
+- ✅ **Parallel Processing**: Uses Promise.allSettled for batch operations
+- ✅ **Optimistic Updates**: UI updates immediately after successful operations
+- ✅ **State Management**: Efficient tracking of selected items using Set
+- ✅ **Type Safety**: Full TypeScript implementation
+- ✅ **Documentation**: Comprehensive JSDoc documentation
+- ✅ **Interactive Tours**: Built-in component tours for better onboarding
+
+---
+
 ## ⚠️ Admin Features
 - ✅ **Streamlined Upload Process**: One-click access to professional upload interface
 - ✅ **Built-in Image Management**: Powered by Cloudinary's widget

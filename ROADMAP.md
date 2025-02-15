@@ -31,6 +31,8 @@
 - [x] Implement streamlined photo upload with Cloudinary widget
 - [x] Add photo gallery with debug information
 - [x] Implement sponsor logo management system
+- [x] Add single and bulk image deletion with confirmation
+- [x] Add comprehensive TypeDoc documentation
 - [ ] Set up data management for sponsors
 - [ ] Create tournament details configuration system
 - [ ] Implement dynamic date management across site
