@@ -11,6 +11,13 @@ export async function GET() {
   try {
     // Get all resources
     const resources = await cloudinary.api.resources({
+      transformation: {
+        width: 300,
+        height: 300,
+        crop: 'fill',
+        quality: 'auto',
+        fetch_format: 'auto'
+      },
       type: 'upload',
       max_results: 500,
       prefix: 'sponsors' // This will look in the sponsors folder

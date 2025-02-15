@@ -1,14 +1,14 @@
 /**
  * Represents the category of a sponsor
  */
-export type SponsorCategory = 'Champion' | 'Eagle';
+export type SponsorLevel = 'Champion' | 'Eagle';
 
 /**
  * Metadata associated with a sponsor
  */
 export interface SponsorMetadata {
-  /** The category of sponsorship */
-  category: SponsorCategory;
+  /** The level of sponsorship */
+  level: SponsorLevel;
   /** Name of the sponsor */
   name: string;
   /** The year this sponsorship is for */

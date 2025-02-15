@@ -50,6 +50,14 @@ CLOUDINARY_API_SECRET=your-api-secret
 
 ## Image Management
 
+The website uses Cloudinary for efficient image management, particularly for sponsor logos. Key features include:
+
+- Single file upload per sponsor with preview
+- Automatic image optimization and transformations
+- Metadata management (sponsor name, level, year, optional website)
+- Responsive image gallery with optimized thumbnails
+- Bulk selection and deletion capabilities
+
 The project uses Cloudinary for efficient image management. Here's how it works:
 
 ### Admin Dashboard

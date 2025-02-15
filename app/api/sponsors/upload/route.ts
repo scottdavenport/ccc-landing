@@ -49,15 +49,23 @@ export async function POST(request: NextRequest) {
         {
           folder: 'sponsors',
           resource_type: 'image',
+          // Use sponsor name for better identification
+          public_id: `${metadata.level}/${metadata.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${metadata.year}`,
+          display_name: `${metadata.name} (${metadata.level} Sponsor ${metadata.year})`,
+          // Optimize image on upload
+          transformation: [
+            { width: 500, height: 375, crop: 'fill', quality: 'auto', format: 'auto' },
+            { width: 300, height: 300, crop: 'fill', quality: 'auto', format: 'auto' }
+          ],
           // Add metadata as Cloudinary context
           context: {
-            category: metadata.category,
+            level: metadata.level,
             name: metadata.name,
             year: metadata.year.toString(),
             website: metadata.website || '',
           },
           // Add tags for easier filtering
-          tags: [metadata.category, `year_${metadata.year}`],
+          tags: [metadata.level, `year_${metadata.year}`],
         },
         (error, result) => {
           if (error) reject(error);
