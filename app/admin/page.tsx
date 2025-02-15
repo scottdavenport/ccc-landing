@@ -1,6 +1,7 @@
 'use client';
 
 import PhotoUploadModal from '@/components/admin/PhotoUploadModal';
+import PhotoGallery from '@/components/admin/PhotoGallery';
 import SponsorUpload from '@/components/admin/SponsorUpload';
 
 export default function AdminPage() {
@@ -11,11 +12,15 @@ export default function AdminPage() {
       <div className="grid gap-8">
         <section className="p-6 bg-white rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Photo Management</h2>
-          <PhotoUploadModal 
-            onUploadComplete={(images) => {
-              console.log('Uploaded images:', images);
-            }}
-          />
+          <div className="space-y-4">
+            <PhotoUploadModal 
+              onUploadComplete={(images) => {
+                console.log('Uploaded images:', images);
+                window.location.reload(); // Refresh to show new images
+              }}
+            />
+            <PhotoGallery />
+          </div>
         </section>
 
         <section className="p-6 bg-white rounded-lg shadow">
