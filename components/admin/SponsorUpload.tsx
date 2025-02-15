@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { DropZone } from './DropZone';
 import { ImagePreview } from './ImagePreview';
+import { DialogClose } from '@/components/ui/dialog';
 
 const sponsorCategories: SponsorCategory[] = ['Champion', 'Eagle'];
 
@@ -45,7 +46,7 @@ const formSchema = z.object({
  * - Client-side validation
  * - Submission handling
  */
-export default function SponsorUpload() {
+export function SponsorUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -79,9 +80,12 @@ export default function SponsorUpload() {
       }
 
       toast.success('Sponsor added successfully!');
-      // Reset form
+      // Reset form and close dialog
       form.reset();
       setFile(null);
+      // Find and click the close button
+      const closeButton = document.querySelector('[data-dialog-close]') as HTMLButtonElement;
+      if (closeButton) closeButton.click();
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Failed to upload sponsor information');
@@ -185,13 +189,19 @@ export default function SponsorUpload() {
           )}
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isUploading}
-        >
-          {isUploading ? 'Uploading...' : 'Upload Sponsor'}
-        </Button>
+        <div className="flex justify-end gap-4 pt-4">
+          <DialogClose asChild>
+            <Button type="button" variant="outline">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            type="submit"
+            disabled={isUploading}
+          >
+            {isUploading ? 'Uploading...' : 'Add Sponsor'}
+          </Button>
+        </div>
       </form>
     </Form>
   );
