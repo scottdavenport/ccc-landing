@@ -40,17 +40,34 @@ npm run dev
 
 ## Environment Configuration
 
-This project uses Supabase for its backend and Cloudinary for image management. You'll need to set up the following environment variables in a `.env.local` file:
+This project uses Cloudinary for image management. You'll need to set up the following environment variables in a `.env.local` file:
 
 ```sh
-VITE_SUPABASE_URL=your-project-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
-NEXT_PUBLIC_CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 ```
 
-You can find the Supabase values in your Supabase project settings and the Cloudinary values in your Cloudinary dashboard. The admin dashboard includes interactive status indicators to help verify both your Supabase and Cloudinary configurations.
+## Image Management
+
+The project uses Cloudinary for efficient image management. Here's how it works:
+
+### Admin Dashboard
+- Access the admin dashboard at `/admin`
+- Use the photo upload widget to add new sponsor logos
+- View all uploaded images with detailed information
+- Images are automatically optimized by Cloudinary
+
+### Cloudinary Setup
+1. Create a Cloudinary account
+2. Create an upload preset named 'sponsors'
+3. Configure the preset:
+   - Set to 'Unsigned' uploading
+   - Set folder to 'sponsors'
+   - Enable image optimization
+4. Add your Cloudinary credentials to `.env.local`
+
+You can find your Cloudinary credentials in your Cloudinary dashboard. The admin dashboard includes debug information to help verify your Cloudinary configuration and view uploaded images.
 
 ## Development
 

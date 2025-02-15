@@ -1,31 +1,31 @@
 # Changelog
 
-## [Unreleased]
-### Added
-- Added user management interface to admin dashboard
-
-### Fixed
-- Fixed admin authentication by storing and checking roles in Supabase user metadata
-- Improved auth state management and role checking in AuthContext
-- Added automatic logout for non-admin users attempting to access admin pages
-- Fixed Cloudinary integration to work in both development and Edge environments
-- Improved Cloudinary API authentication and error handling
-- Added proper Next.js configuration for Edge compatibility
-
-
-## [Unreleased]
-### Fixed
-- Fixed admin authentication state management
-- Added proper loading states while fetching user profile
-- Improved error handling for non-admin users
-- Added `/logout` endpoint for consistent logout behavior
-- Fixed profile fetching to correctly identify admin users
-- Improved admin route redirects and navigation flow
-
-
 All notable changes to the Craven Cancer Classic website will be documented in this file.
 
 ## [Unreleased]
+### Added
+- Enhanced photo management in admin dashboard
+  * Added PhotoGallery component with detailed image display
+  * Implemented debug information panel
+  * Added Cloudinary resource listing API
+  * Improved photo upload widget with auto-refresh
+
+### Changed
+- Simplified application architecture
+  * Removed authentication system
+  * Made admin dashboard publicly accessible
+  * Updated environment configuration to focus on Cloudinary
+
+### Fixed
+- Fixed Cloudinary integration
+  * Improved image upload and display
+  * Added proper error handling
+  * Enhanced debugging capabilities
+
+### Documentation
+- Updated README with Cloudinary setup instructions
+- Updated ROADMAP to reflect current project status
+- Added detailed image management documentation
 
 ### Added
 - Initial project setup with Next.js and TailwindCSS
