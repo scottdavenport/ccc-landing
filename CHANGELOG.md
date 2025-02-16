@@ -13,6 +13,7 @@ All notable changes to the Craven Cancer Classic website will be documented in t
   * Improved grid layout for better thumbnail presentation
   * Added single-file upload restriction for sponsor logos
   * Improved sponsor metadata handling with optional website field
+  * Added preservation of original image dimensions in Cloudinary
 
 ### Changed
 - Simplified application architecture

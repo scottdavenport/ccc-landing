@@ -52,10 +52,10 @@ export async function POST(request: NextRequest) {
           // Use sponsor name for better identification
           public_id: `${metadata.level}/${metadata.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${metadata.year}`,
           display_name: `${metadata.name} (${metadata.level} Sponsor ${metadata.year})`,
-          // Optimize image on upload
-          transformation: [
-            { width: 500, height: 375, crop: 'fill', quality: 'auto', format: 'auto' },
-            { width: 300, height: 300, crop: 'fill', quality: 'auto', format: 'auto' }
+          // Store original and create thumbnails
+          eager: [
+            { width: 500, height: 375, crop: 'fill', fetch_format: 'auto', quality: 'auto:good' },
+            { width: 300, height: 300, crop: 'fill', fetch_format: 'auto', quality: 'auto:good' }
           ],
           // Add metadata as Cloudinary context
           context: {

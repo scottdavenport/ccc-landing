@@ -20,7 +20,8 @@ export async function GET() {
       },
       type: 'upload',
       max_results: 500,
-      prefix: 'sponsors' // This will look in the sponsors folder
+      prefix: 'sponsors', // This will look in the sponsors folder
+      metadata: true // Include metadata
     });
 
     // Get all folders
