@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Added
+- Supabase integration
+  * Added database and authentication setup
+  * Configured middleware for auth handling
+  * Added type definitions for environment variables
+  * Added Supabase client utility
 - New sponsor carousel with smooth animations and interactive features
 - Navigation dots for sponsor carousel
 - Dynamic sponsor level tags from Cloudinary metadata
