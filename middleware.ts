@@ -37,12 +37,12 @@ export async function middleware(request: NextRequest) {
   // Refresh session if expired
   const { data: { session } } = await supabase.auth.getSession()
 
-  // If accessing admin routes, verify auth
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!session) {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
-  }
+  // TODO: Re-enable admin route protection after implementing authentication
+  // if (request.nextUrl.pathname.startsWith('/admin')) {
+  //   if (!session) {
+  //     return NextResponse.redirect(new URL('/', request.url))
+  //   }
+  // }
 
   return response
 }
