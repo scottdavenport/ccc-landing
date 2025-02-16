@@ -4,7 +4,15 @@ Welcome to the Craven Cancer Classic (CCC) website repository! This project serv
 
 ## 🌟 Overview
 
-The CCC website is built with modern web technologies to provide an engaging, responsive experience for our supporters, sponsors, and participants. It features a golf-inspired design system with smooth animations and intuitive navigation.
+The CCC website is built with modern web technologies to provide an engaging, responsive experience for our supporters, sponsors, and participants. It features a golf-inspired design system with smooth animations, intuitive navigation, and interactive elements.
+
+### Key Features
+- 🎯 Dynamic hero section with event details and donation CTA
+- 💰 Real-time funds raised tracker
+- 🏢 Interactive sponsor carousel with lightbox details
+- 📸 Cloudinary-powered image optimization
+- 📱 Fully responsive design
+- ✨ Smooth animations and transitions
 
 ## How can I edit this code?
 

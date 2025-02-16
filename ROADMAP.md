@@ -12,8 +12,10 @@
 - [x] Redesign Hero section with prominent donation CTA
 - [x] Add navigation header with About link
 - [x] Implement scroll indicator animation
-- [ ] Create dynamic Funds Raised component with visual progress
-- [ ] Implement tiered Sponsor showcase (Platinum, Gold, Silver)
+- [x] Add event date and location to Hero section
+- [x] Create dynamic Funds Raised component with visual progress
+- [x] Implement tiered Sponsor showcase with interactive carousel
+- [x] Add lightbox for sponsor details
 - [x] Integrate Cloudinary for sponsor logo management and optimization
 - [ ] Add Past Winners highlight section
 - [ ] Add tournament countdown timer
@@ -49,6 +51,9 @@
 
 ### User Experience
 - [x] Add smooth page transitions
+- [x] Implement interactive sponsor carousel
+- [x] Add elegant lightbox for sponsor details
+- [x] Enhance mobile responsiveness
 - [x] Enhance interactive elements with Framer Motion
 - [x] Implement scroll-based animations
 - [ ] Add more interactive hover states
