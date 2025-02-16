@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
-import useEmblaCarousel, { EmblaOptionsType } from 'embla-carousel-react';
+import useEmblaCarousel from 'embla-carousel-react';
+import type { EmblaOptionsType } from 'embla-carousel';
 import AutoPlay from 'embla-carousel-autoplay';
 import { cn } from '@/lib/utils';
+import { SponsorLightbox } from './SponsorLightbox';
 
 type Sponsor = {
   name: string;
@@ -34,6 +36,7 @@ export default function SponsorCarousel() {
   const [loading, setLoading] = useState(true);
   const [emblaRef, emblaApi] = useEmblaCarousel(OPTIONS, [AutoPlay(AUTOPLAY_OPTIONS)]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedSponsor, setSelectedSponsor] = useState<Sponsor | null>(null);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -108,7 +111,13 @@ export default function SponsorCarousel() {
                     'hover:shadow-xl hover:scale-105'
                   )}
                 >
-                  <div className="relative aspect-[3/2]">
+                  <div 
+                    className="relative aspect-[3/2] cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => setSelectedSponsor(sponsor)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && setSelectedSponsor(sponsor)}
+                  >
                     <Image
                       src={sponsor.imageUrl}
                       alt={`${sponsor.name} logo`}
@@ -151,6 +160,12 @@ export default function SponsorCarousel() {
             ))}
           </div>
         </div>
+
+        <SponsorLightbox
+          isOpen={!!selectedSponsor}
+          onClose={() => setSelectedSponsor(null)}
+          sponsor={selectedSponsor}
+        />
       </div>
     </section>
   );

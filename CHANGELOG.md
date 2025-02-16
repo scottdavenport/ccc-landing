@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- New sponsor carousel with smooth animations and interactive features
+- Navigation dots for sponsor carousel
+- Dynamic sponsor level tags from Cloudinary metadata
+- Interactive lightbox for sponsor logos with click-outside-to-close
+
+### Changed
+- Updated funds raised amount to $674K
+- Replaced static sponsor grid with animated carousel
+- Improved sponsor image display with hover effects
+
+
 All notable changes to the Craven Cancer Classic website will be documented in this file.
 
 ## [Unreleased]
