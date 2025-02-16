@@ -225,11 +225,11 @@ export default function PhotoGallery() {
           <div 
             key={resource.public_id} 
             className={cn(
-              "bg-white p-4 rounded-lg shadow transition-colors",
+              "bg-white p-4 rounded-lg shadow transition-colors flex flex-col items-center text-center",
               selectedImages.has(resource.public_id) && "bg-blue-50"
             )}
           >
-            <div className="relative aspect-square mb-2 group h-[150px]">
+            <div className="relative aspect-square mb-2 group h-[150px] w-full">
               <Image
                 src={resource.secure_url}
                 alt={resource.public_id}
@@ -250,11 +250,12 @@ export default function PhotoGallery() {
                 )}
               </button>
             </div>
-            <div className="text-xs space-y-1">
+            <div className="text-xs space-y-1 w-full">
               <div>
-                <p className="font-semibold truncate">{resource.public_id}</p>
-                <p className="text-gray-500">{new Date(resource.created_at).toLocaleDateString()}</p>
-                <p className="text-gray-500">{resource.format} - {(resource.bytes / 1024).toFixed(2)}KB</p>
+                <p className="font-semibold truncate text-center">{resource.display_name || resource.public_id.split('/').pop()}</p>
+                <p className="text-gray-500 text-center">{new Date(resource.created_at).toLocaleDateString()}</p>
+                <p className="text-gray-500 text-center">{resource.format.toUpperCase()} • {(resource.bytes / 1024).toFixed(1)} KB</p>
+                <p className="text-gray-500 text-center">Original: {resource.width}×{resource.height}</p>
               </div>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
