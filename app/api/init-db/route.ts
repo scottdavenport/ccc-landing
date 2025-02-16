@@ -7,16 +7,28 @@ import { supabase } from '@/utils/supabase';
  */
 async function ensureColumns(tableName: string, columns: string[]): Promise<boolean> {
   try {
-    // Try to select the specified columns to verify they exist
-    const query = columns.join(',');
-    const { error } = await supabase
+    // First try a basic select to ensure the table exists
+    const { error: tableError } = await supabase
       .from(tableName)
-      .select(query)
+      .select('id')
       .limit(1);
 
-    if (error) {
-      console.error(`Error checking columns in ${tableName}:`, error);
+    if (tableError) {
+      console.error(`Error checking table ${tableName}:`, tableError);
       return false;
+    }
+
+    // Then try each column individually to identify which ones might be missing
+    for (const column of columns) {
+      const { error: columnError } = await supabase
+        .from(tableName)
+        .select(column)
+        .limit(1);
+
+      if (columnError) {
+        console.error(`Error checking column ${column} in ${tableName}:`, columnError);
+        return false;
+      }
     }
 
     return true;
