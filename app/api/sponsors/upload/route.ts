@@ -58,14 +58,17 @@ export async function POST(request: NextRequest) {
     // Upload to Cloudinary with metadata
     if (!metadata) throw new Error('Metadata not available');
     
+    // TypeScript type assertion since we've checked metadata is not null
+    const validMetadata = metadata as SponsorUploadMetadata;
+    
     uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'sponsors',
           resource_type: 'image',
           // Use sponsor name for better identification
-          public_id: `${metadata.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${metadata.year}`,
-          display_name: `${metadata.name} (Sponsor ${metadata.year})`,
+          public_id: `${validMetadata.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${validMetadata.year}`,
+          display_name: `${validMetadata.name} (Sponsor ${validMetadata.year})`,
           // Store original and create thumbnails
           eager: [
             { width: 500, height: 375, crop: 'fill', fetch_format: 'auto', quality: 'auto:good' },
@@ -73,13 +76,13 @@ export async function POST(request: NextRequest) {
           ],
           // Add metadata as Cloudinary context
           context: {
-            level: metadata.level,
-            name: metadata.name,
-            year: metadata.year.toString(),
-            website: metadata.website || '',
+            level: validMetadata.level,
+            name: validMetadata.name,
+            year: validMetadata.year.toString(),
+            website: validMetadata.website || '',
           },
           // Add tags for easier filtering
-          tags: [metadata.level, `year_${metadata.year}`],
+          tags: [validMetadata.level, `year_${validMetadata.year}`],
         },
         (error, result) => {
           if (error) reject(error);
