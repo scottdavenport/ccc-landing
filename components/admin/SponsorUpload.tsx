@@ -80,7 +80,9 @@ export function SponsorUpload() {
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json();
+        console.error('Upload error response:', errorData);
+        throw new Error(errorData.error || 'Upload failed');
       }
 
       toast.success('Sponsor added successfully!');

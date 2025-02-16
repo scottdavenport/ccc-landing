@@ -23,10 +23,13 @@ cloudinary.config({
  * @returns Response with the upload result
  */
 export async function POST(request: NextRequest) {
+  let file: File | null = null;
+  let metadataStr: string | null = null;
+
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const metadataStr = formData.get('metadata') as string;
+    file = formData.get('file') as File;
+    metadataStr = formData.get('metadata') as string;
     
     if (!file) {
       return NextResponse.json(
@@ -85,7 +88,7 @@ export async function POST(request: NextRequest) {
       bufferStream.pipe(uploadStream);
     });
 
-    // Create sponsor in database with Cloudinary metadata
+    // Create sponsor in database with essential data
     const result = uploadResult as any;
     const sponsor = await createSponsor({
       name: metadata.name,
@@ -93,25 +96,26 @@ export async function POST(request: NextRequest) {
       year: metadata.year,
       website_url: metadata.website || undefined,
       cloudinary_public_id: result.public_id,
-      cloudinary_url: result.url,
-      cloudinary_secure_url: result.secure_url,
-      cloudinary_thumbnail_url: result.eager[1].secure_url, // Using the 300x300 thumbnail
-      cloudinary_original_filename: file.name,
-      cloudinary_format: result.format,
-      cloudinary_resource_type: result.resource_type,
-      cloudinary_created_at: new Date(result.created_at),
-      cloudinary_bytes: result.bytes,
-      cloudinary_width: result.width,
-      cloudinary_height: result.height,
-      cloudinary_folder: result.folder,
-      cloudinary_tags: result.tags,
+      image_url: result.secure_url, // Always use secure URL
     });
 
     return NextResponse.json(sponsor);
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('Upload error details:', {
+      error,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : undefined,
+      metadata: metadataStr || 'No metadata provided',
+      file: file?.name || 'No file provided',
+      cloudinaryConfig: {
+        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+        hasApiKey: !!process.env.CLOUDINARY_API_KEY,
+        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
+      },
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    });
     return NextResponse.json(
-      { error: 'Failed to upload image' },
+      { error: error instanceof Error ? error.message : 'Failed to upload image' },
       { status: 500 }
     );
   }

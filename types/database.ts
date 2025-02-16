@@ -13,18 +13,7 @@ export interface Sponsor {
   year: number;
   website_url?: string;
   cloudinary_public_id: string;
-  cloudinary_url: string;
-  cloudinary_secure_url: string;
-  cloudinary_thumbnail_url: string;
-  cloudinary_original_filename?: string;
-  cloudinary_format: string;
-  cloudinary_resource_type: string;
-  cloudinary_created_at: Date;
-  cloudinary_bytes: number;
-  cloudinary_width: number;
-  cloudinary_height: number;
-  cloudinary_folder: string;
-  cloudinary_tags: string[];
+  image_url: string;
   created_at: string;
   updated_at: string;
   sponsor_level?: SponsorLevel; // Joined data
