@@ -3,52 +3,32 @@
 ## [Unreleased]
 
 ### Added
-- Supabase integration
-  * Added database and authentication setup
-  * Configured middleware for auth handling
-  * Added type definitions for environment variables
-  * Added Supabase client utility
-- New sponsor carousel with smooth animations and interactive features
-- Navigation dots for sponsor carousel
-- Dynamic sponsor level tags from Cloudinary metadata
-- Interactive lightbox for sponsor logos with click-outside-to-close
-
-### Changed
-- Updated funds raised amount to $674K
-- Replaced static sponsor grid with animated carousel
-- Improved sponsor image display with hover effects
-- Fixed Supabase migration to properly handle schema creation and prevent accidental table drops
-
-
-All notable changes to the Craven Cancer Classic website will be documented in this file.
-
-## [Unreleased]
-### Added
-- Enhanced photo management in admin dashboard
+- Enhanced sponsor management in admin dashboard
   * Added PhotoGallery component with detailed image display
-  * Implemented debug information panel
-  * Added Cloudinary resource listing API
-  * Improved photo upload widget with auto-refresh
+  * Implemented Cloudinary integration for image uploads
+  * Added sponsor level selection with dynamic pricing
   * Added optimized thumbnail generation and display
-  * Improved grid layout for better thumbnail presentation
   * Added single-file upload restriction for sponsor logos
-  * Improved sponsor metadata handling with optional website field
-  * Added preservation of original image dimensions in Cloudinary
+  * Added sponsor metadata handling with optional website field
 
 ### Changed
-- Simplified application architecture
-  * Removed authentication system
-  * Made admin dashboard publicly accessible
-  * Updated environment configuration to focus on Cloudinary
+- Improved database schema
+  * Consolidated migrations into single initial schema file
+  * Updated sponsors table with new fields for Cloudinary integration
+  * Added proper constraints for required fields
+  * Simplified sponsor image metadata storage
 
 ### Fixed
-- Fixed Cloudinary integration
-  * Improved image upload and display
-  * Added proper error handling
-  * Enhanced debugging capabilities
+- Fixed Supabase integration
+  * Added proper error handling and debugging
+  * Improved schema validation
+  * Enhanced error messages for better debugging
+  * Fixed issue with missing image_url column
 
 ### Documentation
-- Updated README with Cloudinary setup instructions
+- Updated README with setup instructions
+- Added comprehensive error logging
+- Added detailed comments for database schema
 - Updated ROADMAP to reflect current project status
 - Added detailed image management documentation
 

@@ -56,8 +56,9 @@ CREATE TABLE sponsors (
     contact_name TEXT,
     contact_email TEXT,
     contact_phone TEXT,
-    logo_url TEXT,
-    image_url TEXT,
+    website_url TEXT,
+    cloudinary_public_id TEXT NOT NULL,
+    image_url TEXT NOT NULL,
     year INTEGER NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
