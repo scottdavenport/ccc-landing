@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     // Check if error is related to missing column and try to refresh schema
     const errorMessage = error instanceof Error ? error.message : '';
-    if (errorMessage.includes('image_url') && errorMessage.includes('schema cache')) {
+    if (errorMessage.includes('image_url') && errorMessage.includes('schema cache') && result) {
       try {
         // Refresh schema cache by forcing a new query
         await refreshSchemaCache();
