@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { createSponsor } from '@/utils/database';
+import { refreshSchemaCache } from '@/utils/supabase';
 
 interface SponsorUploadMetadata {
   name: string;
@@ -119,8 +120,10 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : '';
     if (errorMessage.includes('image_url') && errorMessage.includes('schema cache')) {
       try {
-        await supabase.schema.reload();
-        // Try the operation again after schema reload
+        // Refresh schema cache by forcing a new query
+        await refreshSchemaCache();
+        
+        // Try the operation again after cache refresh
         const sponsor = await createSponsor({
           name: metadata.name,
           level: metadata.level,
@@ -131,7 +134,7 @@ export async function POST(request: NextRequest) {
         });
         return NextResponse.json(sponsor);
       } catch (retryError) {
-        console.error('Failed to retry after schema reload:', retryError);
+        console.error('Failed to retry after schema cache refresh:', retryError);
       }
     }
 

@@ -21,7 +21,17 @@ export const supabase = createClient(
   }
 );
 
-// Reload schema on startup to ensure we have the latest schema
-if (typeof window !== 'undefined') {
-  supabase.schema.reload().catch(console.error);
+// Helper function to refresh schema cache
+export async function refreshSchemaCache() {
+  // Force a new query to refresh the schema cache
+  try {
+    await supabase
+      .from('sponsors')
+      .select('id')
+      .limit(1);
+    return true;
+  } catch (error) {
+    console.error('Error refreshing schema cache:', error);
+    return false;
+  }
 }
