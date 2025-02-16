@@ -122,25 +122,46 @@ export async function POST(request: NextRequest) {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     });
 
-    // Check if error is related to missing column and try to refresh schema
+    // Log detailed error information
     const errorMessage = error instanceof Error ? error.message : '';
-    if (errorMessage.includes('image_url') && errorMessage.includes('schema cache') && metadata && uploadResult) {
+    console.error('Upload error details:', {
+      error,
+      errorMessage,
+      errorStack: error instanceof Error ? error.stack : undefined,
+      metadata: metadataStr || 'No metadata provided',
+      file: file?.name || 'No file provided',
+      cloudinaryConfig: {
+        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+        hasApiKey: !!process.env.CLOUDINARY_API_KEY,
+        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
+      },
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      uploadResult: uploadResult ? 'Present' : 'Not present',
+    });
+
+    // If it's a schema cache issue, try to initialize the schema
+    if (errorMessage.includes('schema cache')) {
       try {
-        // Refresh schema cache by forcing a new query
-        await refreshSchemaCache();
-        
-        // Try the operation again after cache refresh
-        const sponsor = await createSponsor({
-          name: metadata.name,
-          level: metadata.level,
-          year: metadata.year,
-          website_url: metadata.website || undefined,
-          cloudinary_public_id: uploadResult.public_id,
-          image_url: uploadResult.secure_url,
-        });
-        return NextResponse.json(sponsor);
+        // Try to initialize the database schema
+        const initResponse = await fetch(new URL('/api/init-db', request.url));
+        if (!initResponse.ok) {
+          throw new Error('Failed to initialize database schema');
+        }
+
+        // If we have all the necessary data, retry the sponsor creation
+        if (metadata && uploadResult) {
+          const sponsor = await createSponsor({
+            name: metadata.name,
+            level: metadata.level,
+            year: metadata.year,
+            website_url: metadata.website || undefined,
+            cloudinary_public_id: uploadResult.public_id,
+            image_url: uploadResult.secure_url,
+          });
+          return NextResponse.json(sponsor);
+        }
       } catch (retryError) {
-        console.error('Failed to retry after schema cache refresh:', retryError);
+        console.error('Failed to retry after schema initialization:', retryError);
       }
     }
 
