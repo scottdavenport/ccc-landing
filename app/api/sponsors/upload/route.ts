@@ -85,12 +85,26 @@ export async function POST(request: NextRequest) {
       bufferStream.pipe(uploadStream);
     });
 
-    // Create sponsor in database
+    // Create sponsor in database with Cloudinary metadata
+    const result = uploadResult as any;
     const sponsor = await createSponsor({
       name: metadata.name,
       level: metadata.level,
+      year: metadata.year,
       website_url: metadata.website || undefined,
-      cloudinary_public_id: (uploadResult as any).public_id,
+      cloudinary_public_id: result.public_id,
+      cloudinary_url: result.url,
+      cloudinary_secure_url: result.secure_url,
+      cloudinary_thumbnail_url: result.eager[1].secure_url, // Using the 300x300 thumbnail
+      cloudinary_original_filename: file.name,
+      cloudinary_format: result.format,
+      cloudinary_resource_type: result.resource_type,
+      cloudinary_created_at: new Date(result.created_at),
+      cloudinary_bytes: result.bytes,
+      cloudinary_width: result.width,
+      cloudinary_height: result.height,
+      cloudinary_folder: result.folder,
+      cloudinary_tags: result.tags,
     });
 
     return NextResponse.json(sponsor);
