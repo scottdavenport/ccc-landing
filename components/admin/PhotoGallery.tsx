@@ -148,18 +148,35 @@ export default function PhotoGallery() {
      */
     const fetchResources = async () => {
       try {
+        console.log('Fetching Cloudinary resources...');
         const listResponse = await fetch('/api/cloudinary/list-resources');
-        if (!listResponse.ok) throw new Error('Failed to list resources');
+        
+        // First check if the response is ok
+        if (!listResponse.ok) {
+          const errorData = await listResponse.json();
+          throw new Error(
+            errorData.error || 
+            `Failed to list resources: ${listResponse.status} ${listResponse.statusText}`
+          );
+        }
         
         const data = await listResponse.json();
-        console.log('Cloudinary Data:', data);
+        console.log('Cloudinary Data:', {
+          resourceCount: data.resources?.length || 0,
+          folderCount: data.folders?.length || 0,
+          message: data.message
+        });
         
         setResources(data.resources || []);
         setFolders(data.folders || []);
         setError(null);
       } catch (error) {
-        console.error('Error:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+        console.error('Error fetching resources:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
+        setError(error instanceof Error ? error.message : 'Failed to load resources');
       } finally {
         // We're done loading, whether it worked or not
         setLoading(false);
@@ -170,10 +187,38 @@ export default function PhotoGallery() {
     fetchResources();
   }, []); // The empty [] means "only do this when the page first loads"
 
-  // If we're still loading, show a loading message
-  if (loading) return <div>Loading...</div>;
-  // If something went wrong, show the error in red
-  if (error) return <div className="text-red-500">Error: {error}</div>;
+  // If we're still loading, show a loading message with spinner
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <p className="text-gray-600">Loading resources...</p>
+      </div>
+    );
+  }
+
+  // If something went wrong, show a nice error message
+  if (error) {
+    return (
+      <div className="p-8 max-w-xl mx-auto">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r">
+          <div className="flex items-center mb-2">
+            <svg className="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="text-lg font-medium text-red-800">Error Loading Resources</h3>
+          </div>
+          <p className="text-red-700 whitespace-pre-wrap">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Now let's show our sponsor logos!
   return (
