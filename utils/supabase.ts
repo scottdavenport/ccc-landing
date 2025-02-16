@@ -68,17 +68,28 @@ export async function refreshSchemaCache(maxRetries = 5) {
         supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')?.[0] || 'not-set',
         nodeEnv: process.env.NODE_ENV,
       });
-      return false;
-    }
 
-    console.log('Schema cache refreshed successfully');
-    return true;
-  } catch (error) {
-    console.error('Schema cache refresh failed:', {
-      error,
-      supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')?.[0] || 'not-set',
-      nodeEnv: process.env.NODE_ENV,
-    });
-    return false;
+      // Wait before next retry
+      const delay = 1000 * Math.pow(2, i);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    } catch (error) {
+      console.error('Schema cache refresh failed:', {
+        error,
+        attempt: i + 1,
+        maxRetries,
+        supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')?.[0] || 'not-set',
+        nodeEnv: process.env.NODE_ENV,
+      });
+
+      if (i === maxRetries - 1) {
+        return false;
+      }
+
+      // Wait before next retry
+      const delay = 1000 * Math.pow(2, i);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
+  
+  return false;
 }

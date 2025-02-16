@@ -38,8 +38,8 @@ async function warmupConnection(maxRetries = 5): Promise<boolean> {
 
   for (let i = 0; i < maxRetries; i++) {
     try {
-      // Simple health check query
-      const { data, error } = await supabase.from('_prisma_migrations').select('*').limit(1);
+      // Simple health check query using sponsors table instead of _prisma_migrations
+      const { data, error } = await supabase.from('sponsors').select('id').limit(1);
       if (!error) {
         console.log('Connection warmup successful');
         return true;
