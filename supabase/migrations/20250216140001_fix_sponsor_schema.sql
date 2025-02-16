@@ -1,5 +1,9 @@
--- Create sponsor_levels table if it doesn't exist
-CREATE TABLE IF NOT EXISTS sponsor_levels (
+-- Drop and recreate tables to ensure clean schema
+DROP TABLE IF EXISTS sponsors;
+DROP TABLE IF EXISTS sponsor_levels;
+
+-- Create sponsor_levels table
+CREATE TABLE sponsor_levels (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     amount DECIMAL NOT NULL,
@@ -7,8 +11,8 @@ CREATE TABLE IF NOT EXISTS sponsor_levels (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create sponsors table if it doesn't exist
-CREATE TABLE IF NOT EXISTS sponsors (
+-- Create sponsors table with all required columns
+CREATE TABLE sponsors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     level UUID REFERENCES sponsor_levels(id),
@@ -20,23 +24,17 @@ CREATE TABLE IF NOT EXISTS sponsors (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Add image columns if they don't exist (this is safe to run multiple times)
-DO $$
+-- Create function to refresh schema cache
+CREATE OR REPLACE FUNCTION refresh_schema_cache()
+RETURNS void AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sponsors' AND column_name = 'image_url') THEN
-        ALTER TABLE sponsors ADD COLUMN image_url TEXT;
-    END IF;
+    -- Force a schema refresh by analyzing tables
+    ANALYZE sponsors;
+    ANALYZE sponsor_levels;
+    -- Add a small delay to ensure cache is updated
+    PERFORM pg_sleep(0.1);
+END;
+$$ LANGUAGE plpgsql;
 
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sponsors' AND column_name = 'cloudinary_public_id') THEN
-        ALTER TABLE sponsors ADD COLUMN cloudinary_public_id TEXT;
-    END IF;
-
-    -- Make columns NOT NULL if they exist
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sponsors' AND column_name = 'image_url') THEN
-        ALTER TABLE sponsors ALTER COLUMN image_url SET NOT NULL;
-    END IF;
-
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sponsors' AND column_name = 'cloudinary_public_id') THEN
-        ALTER TABLE sponsors ALTER COLUMN cloudinary_public_id SET NOT NULL;
-    END IF;
-END $$;
+-- Execute schema refresh
+SELECT refresh_schema_cache();
