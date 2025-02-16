@@ -9,7 +9,7 @@ export const FundsRaised = () => {
   const ref = useRef(null);
   const isInView = useInView(ref);
   const [count, setCount] = useState(0);
-  const target = 1250000; // $1.25M
+  const target = 674000; // $674K
 
   useEffect(() => {
     if (isInView) {
