@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { SponsorMetadata } from '@/types/sponsor';
+import { createSponsor } from '@/utils/database';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
           folder: 'sponsors',
           resource_type: 'image',
           // Use sponsor name for better identification
-          public_id: `${metadata.level}/${metadata.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${metadata.year}`,
-          display_name: `${metadata.name} (${metadata.level} Sponsor ${metadata.year})`,
+          public_id: `${metadata.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${metadata.year}`,
+          display_name: `${metadata.name} (Sponsor ${metadata.year})`,
           // Store original and create thumbnails
           eager: [
             { width: 500, height: 375, crop: 'fill', fetch_format: 'auto', quality: 'auto:good' },
@@ -78,7 +78,15 @@ export async function POST(request: NextRequest) {
       bufferStream.pipe(uploadStream);
     });
 
-    return NextResponse.json(uploadResult);
+    // Create sponsor in database
+    const sponsor = await createSponsor({
+      name: metadata.name,
+      level: metadata.level,
+      website_url: metadata.website || null,
+      cloudinary_public_id: (uploadResult as any).public_id,
+    });
+
+    return NextResponse.json(sponsor);
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
