@@ -114,6 +114,27 @@ export async function POST(request: NextRequest) {
       },
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
     });
+
+    // Check if error is related to missing column and try to refresh schema
+    const errorMessage = error instanceof Error ? error.message : '';
+    if (errorMessage.includes('image_url') && errorMessage.includes('schema cache')) {
+      try {
+        await supabase.schema.reload();
+        // Try the operation again after schema reload
+        const sponsor = await createSponsor({
+          name: metadata.name,
+          level: metadata.level,
+          year: metadata.year,
+          website_url: metadata.website || undefined,
+          cloudinary_public_id: result.public_id,
+          image_url: result.secure_url,
+        });
+        return NextResponse.json(sponsor);
+      } catch (retryError) {
+        console.error('Failed to retry after schema reload:', retryError);
+      }
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to upload image' },
       { status: 500 }

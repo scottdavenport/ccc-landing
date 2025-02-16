@@ -20,3 +20,8 @@ export const supabase = createClient(
     },
   }
 );
+
+// Reload schema on startup to ensure we have the latest schema
+if (typeof window !== 'undefined') {
+  supabase.schema.reload().catch(console.error);
+}
