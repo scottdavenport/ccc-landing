@@ -51,13 +51,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!metadata) throw new Error('Metadata not available');
+
+    // Validate Supabase connection and schema first
+    try {
+      // Initialize database schema
+      const initResponse = await fetch(new URL('/api/init-db', request.url));
+      if (!initResponse.ok) {
+        throw new Error('Failed to initialize database schema');
+      }
+
+      // Test sponsor creation with a dry run
+      await createSponsor({
+        name: metadata.name,
+        level: metadata.level,
+        year: metadata.year,
+        website_url: metadata.website || undefined,
+        cloudinary_public_id: 'test-id',
+        image_url: 'https://test-url.com',
+      }).catch((error) => {
+        // Abort the test insert
+        throw error;
+      });
+    } catch (error) {
+      console.error('Database validation failed:', error);
+      return NextResponse.json(
+        { error: 'Database not ready. Please try again.' },
+        { status: 503 }
+      );
+    }
+
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
     // Upload to Cloudinary with metadata
-    if (!metadata) throw new Error('Metadata not available');
-    
     // TypeScript type assertion since we've checked metadata is not null
     const validMetadata = metadata as SponsorUploadMetadata;
     
@@ -98,29 +126,34 @@ export async function POST(request: NextRequest) {
     // Create sponsor in database with essential data
     const result = uploadResult as any;
     const sponsor = await createSponsor({
-      name: metadata.name,
-      level: metadata.level,
-      year: metadata.year,
-      website_url: metadata.website || undefined,
+      name: validMetadata.name,
+      level: validMetadata.level,
+      year: validMetadata.year,
+      website_url: validMetadata.website || undefined,
       cloudinary_public_id: result.public_id,
       image_url: result.secure_url, // Always use secure URL
+    }).catch(async (error) => {
+      // If database insert fails, delete the uploaded image
+      try {
+        await cloudinary.uploader.destroy(result.public_id);
+        console.log('Cleaned up orphaned Cloudinary image:', result.public_id);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup Cloudinary image:', cleanupError);
+      }
+      throw error; // Re-throw the original error
     });
 
     return NextResponse.json(sponsor);
   } catch (error) {
-    console.error('Upload error details:', {
-      error,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      errorStack: error instanceof Error ? error.stack : undefined,
-      metadata: metadataStr || 'No metadata provided',
-      file: file?.name || 'No file provided',
-      cloudinaryConfig: {
-        cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-        hasApiKey: !!process.env.CLOUDINARY_API_KEY,
-        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
-      },
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    });
+    // If we uploaded to Cloudinary but failed elsewhere, cleanup
+    if (uploadResult?.public_id) {
+      try {
+        await cloudinary.uploader.destroy(uploadResult.public_id);
+        console.log('Cleaned up orphaned Cloudinary image:', uploadResult.public_id);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup Cloudinary image:', cleanupError);
+      }
+    }
 
     // Log detailed error information
     const errorMessage = error instanceof Error ? error.message : '';
@@ -139,35 +172,14 @@ export async function POST(request: NextRequest) {
       uploadResult: uploadResult ? 'Present' : 'Not present',
     });
 
-    // If it's a schema cache issue, try to initialize the schema
-    if (errorMessage.includes('schema cache')) {
-      try {
-        // Try to initialize the database schema
-        const initResponse = await fetch(new URL('/api/init-db', request.url));
-        if (!initResponse.ok) {
-          throw new Error('Failed to initialize database schema');
-        }
-
-        // If we have all the necessary data, retry the sponsor creation
-        if (metadata && uploadResult) {
-          const sponsor = await createSponsor({
-            name: metadata.name,
-            level: metadata.level,
-            year: metadata.year,
-            website_url: metadata.website || undefined,
-            cloudinary_public_id: uploadResult.public_id,
-            image_url: uploadResult.secure_url,
-          });
-          return NextResponse.json(sponsor);
-        }
-      } catch (retryError) {
-        console.error('Failed to retry after schema initialization:', retryError);
-      }
-    }
-
+    // Return appropriate error message
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to upload image' },
-      { status: 500 }
+      { 
+        error: errorMessage.includes('schema cache') 
+          ? 'Database not ready. Please try again.' 
+          : 'Failed to upload sponsor'
+      },
+      { status: 503 }
     );
   }
 }
