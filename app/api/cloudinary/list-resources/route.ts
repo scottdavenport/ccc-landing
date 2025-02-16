@@ -21,7 +21,8 @@ export async function GET() {
       type: 'upload',
       max_results: 500,
       prefix: 'sponsors', // This will look in the sponsors folder
-      metadata: true // Include metadata
+      metadata: true, // Include metadata
+      tags: true // Include tags in the response
     });
 
     // Get all folders
