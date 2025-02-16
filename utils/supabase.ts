@@ -30,24 +30,41 @@ export const supabase = createClient(
     auth: {
       persistSession: true,
     },
+    db: {
+      schema: 'public',
+    },
+    // Add retries for preview environment
+    ...(process.env.VERCEL_ENV === 'preview' && {
+      realtime: {
+        params: {
+          eventsPerSecond: 2,
+        },
+      },
+    }),
   }
 );
 
 // Log successful client creation
 console.log('Supabase client initialized successfully with URL prefix:', envState.supabaseUrlPrefix);
 
-// Helper function to refresh schema cache
-export async function refreshSchemaCache() {
-  // Force a new query to refresh the schema cache
-  try {
-    const { error } = await supabase
-      .from('sponsors')
-      .select('id')
-      .limit(1);
+// Helper function to refresh schema cache with exponential backoff
+export async function refreshSchemaCache(maxRetries = 5) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      // Force queries to refresh schema cache for both tables
+      const sponsorsPromise = supabase.from('sponsors').select('id').limit(1);
+      const levelsPromise = supabase.from('sponsor_levels').select('id').limit(1);
+      
+      const [sponsors, levels] = await Promise.all([sponsorsPromise, levelsPromise]);
 
-    if (error) {
-      console.error('Schema cache refresh error:', {
-        error,
+      if (!sponsors.error && !levels.error) {
+        console.log('Schema cache refreshed successfully');
+        return true;
+      }
+
+      console.warn(`Schema cache refresh attempt ${i + 1}/${maxRetries} failed:`, {
+        sponsorsError: sponsors.error,
+        levelsError: levels.error,
         supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')?.[0] || 'not-set',
         nodeEnv: process.env.NODE_ENV,
       });

@@ -32,8 +32,11 @@ async function validateTable(tableName: string, retries = 3): Promise<boolean> {
   return false;
 }
 
-async function warmupConnection(retries = 3): Promise<boolean> {
-  for (let i = 0; i < retries; i++) {
+async function warmupConnection(maxRetries = 5): Promise<boolean> {
+  const isPreview = process.env.VERCEL_ENV === 'preview';
+  const baseDelay = isPreview ? 2000 : 1000; // Longer delays in preview
+
+  for (let i = 0; i < maxRetries; i++) {
     try {
       // Simple health check query
       const { data, error } = await supabase.from('_prisma_migrations').select('*').limit(1);
@@ -41,11 +44,23 @@ async function warmupConnection(retries = 3): Promise<boolean> {
         console.log('Connection warmup successful');
         return true;
       }
-      console.warn(`Warmup attempt ${i + 1}/${retries} failed:`, error);
-      if (i < retries - 1) await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      
+      const delay = baseDelay * Math.pow(2, i); // Exponential backoff
+      console.warn(`Warmup attempt ${i + 1}/${maxRetries} failed:`, {
+        error,
+        nextRetryDelay: delay,
+        environment: process.env.VERCEL_ENV || 'development'
+      });
+      
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     } catch (e) {
-      console.error(`Warmup error on attempt ${i + 1}/${retries}:`, e);
-      if (i < retries - 1) await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      console.error(`Warmup error on attempt ${i + 1}/${maxRetries}:`, e);
+      if (i < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, i);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
   }
   return false;
@@ -58,15 +73,21 @@ export async function GET() {
     hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')?.[0] || 'not-set',
     nodeEnv: process.env.NODE_ENV,
+    vercelEnv: process.env.VERCEL_ENV || 'development',
   };
 
   console.log('Init-DB Environment State:', envState);
   
   try {
-    // First warm up the connection
-    const isWarm = await warmupConnection();
+    // First warm up the connection with more retries in preview
+    const maxRetries = process.env.VERCEL_ENV === 'preview' ? 5 : 3;
+    const isWarm = await warmupConnection(maxRetries);
+    
     if (!isWarm) {
-      console.error('Failed to warm up database connection');
+      console.error('Failed to warm up database connection', {
+        environment: process.env.VERCEL_ENV || 'development',
+        maxRetries
+      });
       return NextResponse.json(
         { error: 'Database connection not ready' },
         { status: 503 }
