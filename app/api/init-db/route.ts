@@ -7,22 +7,15 @@ import { supabase } from '@/utils/supabase';
  */
 async function ensureColumns(tableName: string, columns: string[]): Promise<boolean> {
   try {
-    // Query information schema to check column existence
-    const { data, error } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', tableName);
+    // Try to select the specified columns to verify they exist
+    const query = columns.join(',');
+    const { error } = await supabase
+      .from(tableName)
+      .select(query)
+      .limit(1);
 
     if (error) {
-      console.error('Error checking columns:', error);
-      return false;
-    }
-
-    const existingColumns = data?.map(col => col.column_name) || [];
-    const missingColumns = columns.filter(col => !existingColumns.includes(col));
-
-    if (missingColumns.length > 0) {
-      console.warn(`Missing columns in ${tableName}:`, missingColumns);
+      console.error(`Error checking columns in ${tableName}:`, error);
       return false;
     }
 
