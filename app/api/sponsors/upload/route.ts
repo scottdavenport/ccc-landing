@@ -23,7 +23,17 @@ cloudinary.config({
  * @param request - The incoming request containing the image file and metadata
  * @returns Response with the upload result
  */
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
+  // Log environment state
+  console.log('Sponsor Upload Environment:', {
+    vercelEnv: process.env.VERCEL_ENV || 'development',
+    hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    hasCloudinaryConfig: !!(process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET),
+    supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')?.[0] || 'not-set',
+  });
   let file: File | null = null;
   let metadataStr: string | null = null;
   let metadata: SponsorUploadMetadata | null = null;
@@ -57,19 +67,50 @@ export async function POST(request: NextRequest) {
     try {
       // Try to initialize database schema with retries
       let initSuccess = false;
-      for (let i = 0; i < 3; i++) {
+      const maxRetries = process.env.VERCEL_ENV === 'preview' ? 5 : 3;
+      const baseDelay = process.env.VERCEL_ENV === 'preview' ? 2000 : 1000;
+
+      for (let i = 0; i < maxRetries; i++) {
         try {
-          const initResponse = await fetch(new URL('/api/init-db', request.url));
-          if (initResponse.ok) {
+          // Try direct schema refresh first
+          const refreshSuccess = await refreshSchemaCache();
+          if (refreshSuccess) {
+            console.log('Schema cache refreshed successfully');
             initSuccess = true;
             break;
           }
-          console.warn(`Schema init attempt ${i + 1}/3 failed:`, await initResponse.text());
-          // Wait before retrying
-          if (i < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+
+          // Fallback to init-db endpoint
+          const initResponse = await fetch(new URL('/api/init-db', request.url));
+          if (initResponse.ok) {
+            console.log('Schema initialized via init-db endpoint');
+            initSuccess = true;
+            break;
+          }
+
+          const responseText = await initResponse.text();
+          console.warn(`Schema init attempt ${i + 1}/${maxRetries} failed:`, {
+            status: initResponse.status,
+            response: responseText,
+            attempt: i + 1,
+            maxRetries,
+            environment: process.env.VERCEL_ENV || 'development'
+          });
+
+          // Wait with exponential backoff
+          if (i < maxRetries - 1) {
+            const delay = baseDelay * Math.pow(2, i);
+            console.log(`Waiting ${delay}ms before next attempt...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
         } catch (e) {
-          console.error(`Schema init attempt ${i + 1}/3 error:`, e);
-          if (i === 2) throw e;
+          console.error(`Schema init attempt ${i + 1}/${maxRetries} error:`, {
+            error: e,
+            attempt: i + 1,
+            maxRetries,
+            environment: process.env.VERCEL_ENV || 'development'
+          });
+          if (i === maxRetries - 1) throw e;
         }
       }
 
