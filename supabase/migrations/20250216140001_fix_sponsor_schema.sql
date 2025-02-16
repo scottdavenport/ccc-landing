@@ -24,6 +24,13 @@ CREATE TABLE sponsors (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Insert sponsor levels with specific UUIDs
+INSERT INTO sponsor_levels (id, name, amount) VALUES
+    ('d8ce4029-8e84-49f5-9a43-a0367066bb54', 'Diamond', 10000),
+    ('f7b5c8a1-6d31-4e6c-9f5d-b9a3d5e8c742', 'Platinum', 5000),
+    ('a2e9d1b3-7c45-4f8a-ae6b-c1d2e3f4a5b6', 'Gold', 2500),
+    ('c4d5e6f7-8g9h-0i1j-2k3l-4m5n6o7p8q9r', 'Silver', 1000);
+
 -- Create function to refresh schema cache
 CREATE OR REPLACE FUNCTION refresh_schema_cache()
 RETURNS void AS $$
