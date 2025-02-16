@@ -26,6 +26,8 @@ cloudinary.config({
 export async function POST(request: NextRequest) {
   let file: File | null = null;
   let metadataStr: string | null = null;
+  let metadata: SponsorUploadMetadata | null = null;
+  let uploadResult: any = null;
 
   try {
     const formData = await request.formData();
@@ -40,7 +42,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate metadata
-    let metadata: SponsorUploadMetadata;
     try {
       metadata = JSON.parse(metadataStr);
     } catch (e) {
@@ -55,7 +56,9 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // Upload to Cloudinary with metadata
-    const uploadResult = await new Promise((resolve, reject) => {
+    if (!metadata) throw new Error('Metadata not available');
+    
+    uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'sponsors',
@@ -118,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     // Check if error is related to missing column and try to refresh schema
     const errorMessage = error instanceof Error ? error.message : '';
-    if (errorMessage.includes('image_url') && errorMessage.includes('schema cache') && result) {
+    if (errorMessage.includes('image_url') && errorMessage.includes('schema cache') && metadata && uploadResult) {
       try {
         // Refresh schema cache by forcing a new query
         await refreshSchemaCache();
@@ -129,8 +132,8 @@ export async function POST(request: NextRequest) {
           level: metadata.level,
           year: metadata.year,
           website_url: metadata.website || undefined,
-          cloudinary_public_id: result.public_id,
-          image_url: result.secure_url,
+          cloudinary_public_id: uploadResult.public_id,
+          image_url: uploadResult.secure_url,
         });
         return NextResponse.json(sponsor);
       } catch (retryError) {
