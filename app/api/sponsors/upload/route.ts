@@ -55,24 +55,55 @@ export async function POST(request: NextRequest) {
 
     // Validate Supabase connection and schema first
     try {
-      // Initialize database schema
-      const initResponse = await fetch(new URL('/api/init-db', request.url));
-      if (!initResponse.ok) {
-        throw new Error('Failed to initialize database schema');
+      // Try to initialize database schema with retries
+      let initSuccess = false;
+      for (let i = 0; i < 3; i++) {
+        try {
+          const initResponse = await fetch(new URL('/api/init-db', request.url));
+          if (initResponse.ok) {
+            initSuccess = true;
+            break;
+          }
+          console.warn(`Schema init attempt ${i + 1}/3 failed:`, await initResponse.text());
+          // Wait before retrying
+          if (i < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        } catch (e) {
+          console.error(`Schema init attempt ${i + 1}/3 error:`, e);
+          if (i === 2) throw e;
+        }
       }
 
-      // Test sponsor creation with a dry run
-      await createSponsor({
-        name: metadata.name,
-        level: metadata.level,
-        year: metadata.year,
-        website_url: metadata.website || undefined,
-        cloudinary_public_id: 'test-id',
-        image_url: 'https://test-url.com',
-      }).catch((error) => {
-        // Abort the test insert
-        throw error;
-      });
+      if (!initSuccess) {
+        throw new Error('Failed to initialize database schema after retries');
+      }
+
+      // Test sponsor creation with retries
+      let testSuccess = false;
+      for (let i = 0; i < 3; i++) {
+        try {
+          await createSponsor({
+            name: metadata.name,
+            level: metadata.level,
+            year: metadata.year,
+            website_url: metadata.website || undefined,
+            cloudinary_public_id: 'test-id',
+            image_url: 'https://test-url.com',
+          }).catch((error) => {
+            // Only throw if it's not a duplicate error
+            if (!error.message?.includes('duplicate')) throw error;
+          });
+          testSuccess = true;
+          break;
+        } catch (e) {
+          console.warn(`Sponsor test attempt ${i + 1}/3 failed:`, e);
+          if (i < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+          else throw e;
+        }
+      }
+
+      if (!testSuccess) {
+        throw new Error('Failed to validate sponsor creation after retries');
+      }
     } catch (error) {
       console.error('Database validation failed:', error);
       return NextResponse.json(
