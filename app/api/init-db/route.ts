@@ -33,6 +33,15 @@ async function validateTable(tableName: string, retries = 3): Promise<boolean> {
 }
 
 export async function GET() {
+  // Log environment state
+  const envState = {
+    hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseUrlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')?.[0] || 'not-set',
+    nodeEnv: process.env.NODE_ENV,
+  };
+
+  console.log('Init-DB Environment State:', envState);
   try {
     // Validate each table with retries
     const results = await Promise.all([
