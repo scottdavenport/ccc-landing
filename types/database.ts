@@ -1,13 +1,20 @@
-export type SponsorLevel = 'platinum' | 'gold' | 'silver' | 'bronze';
+export interface SponsorLevel {
+  id: string;
+  name: string;
+  amount: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Sponsor {
   id: string;
   name: string;
-  level: SponsorLevel;
+  level: string; // UUID reference to sponsor_levels
   website_url?: string;
   cloudinary_public_id: string;
   created_at: string;
   updated_at: string;
+  sponsor_level?: SponsorLevel; // Joined data
 }
 
 export interface Player {
