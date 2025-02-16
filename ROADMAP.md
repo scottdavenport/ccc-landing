@@ -2,6 +2,22 @@
 
 ## 🎯 Phase 1: Core Structure & Design System
 
+### Database & Authentication Setup
+- [ ] Configure Supabase project
+- [ ] Set up database schema
+  - [ ] Sponsors table with Cloudinary integration
+  - [ ] Players table for registration
+  - [ ] Teams table for Captain's Choice format
+  - [ ] Tournament results tracking
+- [ ] Implement authentication system
+  - [ ] Admin authentication
+  - [ ] Protected routes
+  - [ ] User session management
+- [ ] Create database utility functions
+  - [ ] CRUD operations for sponsors
+  - [ ] Team registration handlers
+  - [ ] Tournament results management
+
 ### Design System Setup
 - [ ] Implement golf-inspired color palette in Tailwind config
 - [ ] Create reusable components for consistent UI elements

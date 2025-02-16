@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SponsorLevel, SponsorMetadata } from '@/types/sponsor';
+import type { SponsorLevel } from '@/types/database';
+import { useSponsorLevels } from '@/hooks/useSponsorLevels';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -28,11 +29,9 @@ import { ImagePreview } from './ImagePreview';
 import { DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
-const sponsorLevels: SponsorLevel[] = ['Champion', 'Eagle'];
-
 const formSchema = z.object({
   name: z.string().min(1, 'Sponsor name is required'),
-  level: z.enum(['Champion', 'Eagle'] as const),
+  level: z.string().min(1, 'Sponsor level is required'),
   year: z.number().int().min(2024).max(2100),
   website: z.string().url().optional().or(z.literal('')),
 });
@@ -50,6 +49,7 @@ const formSchema = z.object({
 export function SponsorUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const { levels, isLoading, error } = useSponsorLevels();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -134,9 +134,9 @@ export function SponsorUpload() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {sponsorLevels.map((level) => (
-                    <SelectItem key={level} value={level}>
-                      {level}
+                  {levels.map((level) => (
+                    <SelectItem key={level.id} value={level.id}>
+                      {level.name} (${level.amount.toLocaleString()})
                     </SelectItem>
                   ))}
                 </SelectContent>
