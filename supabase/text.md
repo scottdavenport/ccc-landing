@@ -1,0 +1,10 @@
+    ('Champion', 5000),
+    ('Eagle', 2500),
+    ('Golf Gift', 2500),
+    ('Celebration Lunch', 2500),
+    ('Bloody Mary', 1000),
+    ('Golf Cart', 1000),
+    ('Celebration Wall', 700),
+    ('Thursday Night', 700),
+    ('Chick-Fil-A AM', 500),
+    ('Bojangles PM', 500);
