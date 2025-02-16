@@ -127,42 +127,31 @@ export async function GET() {
     const levelColumns = await ensureColumns('sponsor_levels', ['name', 'amount']);
 
     if (!sponsorColumns || !levelColumns) {
-      console.log('Running schema migration...');
-      // Run migration SQL
-      const migrationSql = `
-        -- Add image columns to sponsors table if they don't exist
-        DO $$ 
-        BEGIN
-            -- Add image_url column if it doesn't exist
-            IF NOT EXISTS (
-                SELECT 1 
-                FROM information_schema.columns 
-                WHERE table_name = 'sponsors' 
-                AND column_name = 'image_url'
-            ) THEN
-                ALTER TABLE sponsors 
-                ADD COLUMN image_url text NOT NULL;
-            END IF;
+      console.log('Running schema refresh...');
+      
+      // Force a refresh of the schema cache by doing a select
+      const { error: refreshError } = await supabase
+        .from('sponsors')
+        .select('*')
+        .limit(1);
 
-            -- Add cloudinary_public_id column if it doesn't exist
-            IF NOT EXISTS (
-                SELECT 1 
-                FROM information_schema.columns 
-                WHERE table_name = 'sponsors' 
-                AND column_name = 'cloudinary_public_id'
-            ) THEN
-                ALTER TABLE sponsors 
-                ADD COLUMN cloudinary_public_id text NOT NULL;
-            END IF;
-        END $$;
-      `;
-
-      const { error: migrationError } = await supabase.rpc('exec', { sql: migrationSql });
-      if (migrationError) {
-        console.error('Migration failed:', migrationError);
-        throw migrationError;
+      if (refreshError) {
+        console.error('Schema refresh failed:', refreshError);
+        throw refreshError;
       }
-      console.log('Migration completed successfully');
+
+      // Wait a moment for cache to update
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Verify columns again
+      const sponsorColumnsRetry = await ensureColumns('sponsors', ['image_url', 'cloudinary_public_id']);
+      const levelColumnsRetry = await ensureColumns('sponsor_levels', ['name', 'amount']);
+
+      if (!sponsorColumnsRetry || !levelColumnsRetry) {
+        throw new Error('Schema validation failed after refresh');
+      }
+
+      console.log('Schema refresh completed successfully');
     }
 
     // Now validate each table with retries
