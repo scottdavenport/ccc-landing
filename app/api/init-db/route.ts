@@ -5,6 +5,34 @@ import { supabase } from '@/utils/supabase';
  * Initialize database schema by forcing a query to each table
  * This ensures the schema cache is properly populated
  */
+async function ensureColumns(tableName: string, columns: string[]): Promise<boolean> {
+  try {
+    // Query information schema to check column existence
+    const { data, error } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_name', tableName);
+
+    if (error) {
+      console.error('Error checking columns:', error);
+      return false;
+    }
+
+    const existingColumns = data?.map(col => col.column_name) || [];
+    const missingColumns = columns.filter(col => !existingColumns.includes(col));
+
+    if (missingColumns.length > 0) {
+      console.warn(`Missing columns in ${tableName}:`, missingColumns);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in ensureColumns:', error);
+    return false;
+  }
+}
+
 async function validateTable(tableName: string, retries = 3): Promise<boolean> {
   for (let i = 0; i < retries; i++) {
     try {
@@ -92,6 +120,49 @@ export async function GET() {
         { error: 'Database connection not ready' },
         { status: 503 }
       );
+    }
+
+    // First check required columns
+    const sponsorColumns = await ensureColumns('sponsors', ['image_url', 'cloudinary_public_id']);
+    const levelColumns = await ensureColumns('sponsor_levels', ['name', 'amount']);
+
+    if (!sponsorColumns || !levelColumns) {
+      console.log('Running schema migration...');
+      // Run migration SQL
+      const migrationSql = `
+        -- Add image columns to sponsors table if they don't exist
+        DO $$ 
+        BEGIN
+            -- Add image_url column if it doesn't exist
+            IF NOT EXISTS (
+                SELECT 1 
+                FROM information_schema.columns 
+                WHERE table_name = 'sponsors' 
+                AND column_name = 'image_url'
+            ) THEN
+                ALTER TABLE sponsors 
+                ADD COLUMN image_url text NOT NULL;
+            END IF;
+
+            -- Add cloudinary_public_id column if it doesn't exist
+            IF NOT EXISTS (
+                SELECT 1 
+                FROM information_schema.columns 
+                WHERE table_name = 'sponsors' 
+                AND column_name = 'cloudinary_public_id'
+            ) THEN
+                ALTER TABLE sponsors 
+                ADD COLUMN cloudinary_public_id text NOT NULL;
+            END IF;
+        END $$;
+      `;
+
+      const { error: migrationError } = await supabase.rpc('exec', { sql: migrationSql });
+      if (migrationError) {
+        console.error('Migration failed:', migrationError);
+        throw migrationError;
+      }
+      console.log('Migration completed successfully');
     }
 
     // Now validate each table with retries
