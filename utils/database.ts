@@ -1,5 +1,23 @@
 import { supabase } from './supabase';
-import type { Sponsor, Player, Team, TeamMember, TournamentResult } from '../types/database';
+
+interface SponsorLevel {
+  id: string;
+  name: string;
+  amount: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Sponsor {
+  id: string;
+  name: string;
+  level: string;
+  website_url?: string;
+  cloudinary_public_id: string;
+  created_at: string;
+  updated_at: string;
+}
+import type { Player, Team, TeamMember, TournamentResult } from '../types/database';
 
 // Sponsor level operations
 export async function getSponsorLevels() {

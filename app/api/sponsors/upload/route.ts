@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { createSponsor } from '@/utils/database';
 
+interface SponsorUploadMetadata {
+  name: string;
+  level: string;
+  year: number;
+  website?: string;
+}
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -29,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate metadata
-    let metadata: SponsorMetadata;
+    let metadata: SponsorUploadMetadata;
     try {
       metadata = JSON.parse(metadataStr);
     } catch (e) {
@@ -82,7 +89,7 @@ export async function POST(request: NextRequest) {
     const sponsor = await createSponsor({
       name: metadata.name,
       level: metadata.level,
-      website_url: metadata.website || null,
+      website_url: metadata.website || undefined,
       cloudinary_public_id: (uploadResult as any).public_id,
     });
 
