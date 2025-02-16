@@ -17,6 +17,7 @@
 - Updated funds raised amount to $674K
 - Replaced static sponsor grid with animated carousel
 - Improved sponsor image display with hover effects
+- Fixed Supabase migration to properly handle schema creation and prevent accidental table drops
 
 
 All notable changes to the Craven Cancer Classic website will be documented in this file.
