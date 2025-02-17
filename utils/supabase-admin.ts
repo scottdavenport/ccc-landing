@@ -30,10 +30,7 @@ export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'created_at' |
     const { data, error } = await supabaseAdmin
       .from('sponsors')
       .insert(sponsor)
-      .select(`
-        *,
-        sponsor_level:sponsor_levels(*)
-      `)
+      .select()
       .single();
     
     if (error) {
@@ -48,7 +45,7 @@ export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'created_at' |
     }
     
     console.log('Successfully created sponsor:', data);
-    return data as Sponsor & { sponsor_level: SponsorLevel };
+    return data as Sponsor;
   } catch (error) {
     console.error('Error in createSponsor:', {
       error,
