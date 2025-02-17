@@ -12,9 +12,13 @@ BEGIN
     GRANT USAGE ON SCHEMA public TO anon;
     GRANT USAGE ON SCHEMA public TO authenticated;
 
-    -- Disable RLS temporarily
-    ALTER TABLE public.sponsor_levels DISABLE ROW LEVEL SECURITY;
-    ALTER TABLE public.sponsors DISABLE ROW LEVEL SECURITY;
+    -- Enable RLS on tables
+    ALTER TABLE public.sponsor_levels ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.sponsors ENABLE ROW LEVEL SECURITY;
+
+    -- Allow service_role to bypass RLS
+    ALTER TABLE public.sponsor_levels FORCE ROW LEVEL SECURITY;
+    ALTER TABLE public.sponsors FORCE ROW LEVEL SECURITY;
 
     -- Grant permissions for service_role (admin access)
     GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
@@ -29,4 +33,15 @@ BEGIN
 
     -- Make sure sequences are accessible
     GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO service_role;
+
+    -- Create policies that allow service_role to bypass RLS
+    DROP POLICY IF EXISTS service_role_sponsor_levels ON public.sponsor_levels;
+    CREATE POLICY service_role_sponsor_levels ON public.sponsor_levels
+        USING (true)
+        WITH CHECK (true);
+
+    DROP POLICY IF EXISTS service_role_sponsors ON public.sponsors;
+    CREATE POLICY service_role_sponsors ON public.sponsors
+        USING (true)
+        WITH CHECK (true);
 END $$;
