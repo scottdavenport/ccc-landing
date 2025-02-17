@@ -101,7 +101,6 @@ export async function POST(request: NextRequest) {
       name: metadata.name,
       level: metadata.level,
       year: metadata.year,
-      website_url: metadata.website || undefined,
       cloudinary_public_id: result.public_id,
       image_url: result.secure_url, // Always use secure URL
     });
@@ -154,7 +153,6 @@ export async function POST(request: NextRequest) {
             name: metadata.name,
             level: metadata.level,
             year: metadata.year,
-            website_url: metadata.website || undefined,
             cloudinary_public_id: uploadResult.public_id,
             image_url: uploadResult.secure_url,
           });

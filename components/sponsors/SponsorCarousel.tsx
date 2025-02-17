@@ -56,7 +56,8 @@ export default function SponsorCarousel() {
         const response = await fetch('/api/cloudinary/list-resources');
         const data = await response.json();
         
-        const sponsorData = data.resources.map((resource: any) => ({
+        // Safely map resources with error checking
+        const sponsorData = (data.resources || []).map((resource: any) => ({
           name: resource.context?.name || resource.public_id.split('/').pop(),
           level: resource.tags?.[0] || resource.context?.level || 'Champion',
           imageUrl: resource.secure_url,
@@ -64,10 +65,14 @@ export default function SponsorCarousel() {
           website: resource.context?.website,
         }));
 
-        // Duplicate sponsors if less than 3 to ensure smooth scrolling
+        // Safely duplicate sponsors if needed (prevent infinite loop)
         const minSponsors = 3;
-        while (sponsorData.length < minSponsors) {
-          sponsorData.push(...sponsorData);
+        if (sponsorData.length > 0 && sponsorData.length < minSponsors) {
+          const duplicatesNeeded = minSponsors - sponsorData.length;
+          const duplicates = Array(duplicatesNeeded)
+            .fill(null)
+            .flatMap(() => sponsorData);
+          sponsorData.push(...duplicates.slice(0, duplicatesNeeded));
         }
 
         setSponsors(sponsorData);
