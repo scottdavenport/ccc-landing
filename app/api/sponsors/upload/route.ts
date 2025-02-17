@@ -79,7 +79,23 @@ async function handleSponsorUpload(request: NextRequest) {
       throw new Error('Failed to upload to Cloudinary');
     }
 
+    // Log Supabase client state before insert
+    console.log('Supabase client check before insert:', {
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10),
+      auth: supabase.auth.admin !== undefined ? 'Has admin API' : 'No admin API'
+    });
+
     // Create sponsor in database
+    console.log('Attempting to insert sponsor:', {
+      name: metadata.name,
+      level: metadata.level,
+      year: metadata.year,
+      hasCloudinaryId: !!uploadResult.public_id,
+      hasImageUrl: !!uploadResult.secure_url
+    });
+
     const { data, error } = await supabase
       .from('sponsors')
       .insert({
@@ -93,6 +109,12 @@ async function handleSponsorUpload(request: NextRequest) {
       .single();
 
     if (error) {
+      console.error('Supabase insert error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       throw error;
     }
 
