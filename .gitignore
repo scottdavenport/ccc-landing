@@ -49,6 +49,10 @@ Thumbs.db
 *.tmp
 *.temp
 
+# Database utilities
+drop_schema.sql
+supabase/reset_db.sql
+
 # IDE specific files
 .idea/
 .vscode/
