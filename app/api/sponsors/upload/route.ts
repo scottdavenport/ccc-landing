@@ -87,6 +87,18 @@ async function handleSponsorUpload(request: NextRequest) {
       auth: supabase.auth.admin !== undefined ? 'Has admin API' : 'No admin API'
     });
 
+    // Verify database connection
+    try {
+      const { error: healthError } = await supabase.from('sponsor_levels').select('count').single();
+      if (healthError) {
+        console.error('Database health check failed:', healthError);
+      } else {
+        console.log('Database connection verified');
+      }
+    } catch (e) {
+      console.error('Error checking database health:', e);
+    }
+
     // Create sponsor in database
     console.log('Attempting to insert sponsor:', {
       name: metadata.name,
@@ -95,6 +107,19 @@ async function handleSponsorUpload(request: NextRequest) {
       hasCloudinaryId: !!uploadResult.public_id,
       hasImageUrl: !!uploadResult.secure_url
     });
+
+    // Try a dry-run select first
+    try {
+      const { data: levelCheck } = await supabase
+        .from('sponsor_levels')
+        .select('id')
+        .eq('id', metadata.level)
+        .single();
+      
+      console.log('Level check result:', { hasLevel: !!levelCheck });
+    } catch (e) {
+      console.error('Error checking sponsor level:', e);
+    }
 
     const { data, error } = await supabase
       .from('sponsors')
@@ -113,7 +138,9 @@ async function handleSponsorUpload(request: NextRequest) {
         code: error.code,
         message: error.message,
         details: error.details,
-        hint: error.hint
+        hint: error.hint,
+        query: error.query,
+        requestId: error.requestId
       });
       throw error;
     }
