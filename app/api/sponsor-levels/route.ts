@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getSponsorLevels } from '@/utils/database';
+import { getPublicSponsorLevels } from '@/utils/database-public';
 
 export async function GET() {
   try {
-    const levels = await getSponsorLevels();
+    const levels = await getPublicSponsorLevels();
     return NextResponse.json(levels);
   } catch (error) {
     console.error('Error fetching sponsor levels:', error);
