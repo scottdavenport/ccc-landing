@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { createSponsor } from '@/utils/database';
+import { createSponsor } from '@/utils/supabase-admin';
 import { refreshSchemaCache } from '@/utils/supabase';
 
 interface SponsorUploadMetadata {
