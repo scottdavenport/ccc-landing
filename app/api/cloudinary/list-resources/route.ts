@@ -31,7 +31,17 @@ export async function GET() {
 
     console.log('Fetching Cloudinary resources...');
     
-    // Get all resources
+    // Check if we're being rate limited
+    const rateLimit = await cloudinary.api.usage();
+    if (rateLimit.rate_limit_remaining === 0) {
+      console.warn('Rate limit reached, waiting until reset');
+      return NextResponse.json(
+        { error: 'Rate limit reached, please try again later' },
+        { status: 429 }
+      );
+    }
+
+    // Get only sponsor resources (optimized query)
     const resources = await cloudinary.api.resources({
       transformation: {
         width: 300,
@@ -41,26 +51,19 @@ export async function GET() {
         fetch_format: 'auto'
       },
       type: 'upload',
-      max_results: 500,
-      prefix: 'sponsors', // This will look in the sponsors folder
-      metadata: true, // Include metadata
-      tags: true // Include tags in the response
+      max_results: 100, // Reduced from 500 to improve performance
+      prefix: 'sponsors',
+      metadata: true,
+      tags: true
     });
 
     console.log('Resources fetched:', {
       resourceCount: resources.resources?.length || 0,
-      rate_limit_allowed: resources.rate_limit_allowed,
       rate_limit_remaining: resources.rate_limit_remaining,
-      rate_limit_reset_at: resources.rate_limit_reset_at,
     });
 
-    // Get all folders
-    console.log('Fetching Cloudinary folders...');
-    const folders = await cloudinary.api.root_folders();
-
-    console.log('Folders fetched:', {
-      folderCount: folders.folders?.length || 0
-    });
+    // Skip folder fetch to reduce API calls
+    const folders = { folders: [] };
 
     return NextResponse.json({
       resources: resources.resources,
