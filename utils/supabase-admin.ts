@@ -28,6 +28,23 @@ export const getSupabaseAdmin = () => {
     throw new Error('Missing env.SUPABASE_SERVICE_ROLE_KEY');
   }
 
+  // Verify the JWT role
+  try {
+    const jwt = supabaseServiceRoleKey.split('.')[1];
+    const payload = JSON.parse(Buffer.from(jwt, 'base64').toString());
+    console.log('Service key role verification:', {
+      role: payload.role,
+      iss: payload.iss,
+      exp: new Date(payload.exp * 1000).toISOString()
+    });
+    
+    if (payload.role !== 'service_role') {
+      console.error('WARNING: Service key does not have service_role!');
+    }
+  } catch (e) {
+    console.error('Error verifying service role key:', e);
+  }
+
   // Create client with enhanced logging
   const client = createClient<Database>(
     supabaseUrl,
