@@ -138,9 +138,7 @@ async function handleSponsorUpload(request: NextRequest) {
         code: error.code,
         message: error.message,
         details: error.details,
-        hint: error.hint,
-        query: error.query,
-        requestId: error.requestId
+        hint: error.hint
       });
       throw error;
     }
