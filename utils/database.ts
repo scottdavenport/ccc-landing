@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { supabaseAdmin } from './supabase-admin';
 import type { SponsorLevel, Sponsor } from '../types/database';
 
 // Sponsor level operations
@@ -13,7 +14,7 @@ export async function getSponsorLevels() {
 }
 
 export async function createSponsorLevel(level: Omit<SponsorLevel, 'id' | 'created_at' | 'updated_at'>) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('sponsor_levels')
     .insert(level)
     .select()
@@ -41,7 +42,7 @@ export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'created_at' |
   try {
     console.log('Creating sponsor with data:', sponsor);
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('sponsors')
       .insert(sponsor)
       .select(`
