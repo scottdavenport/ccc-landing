@@ -4,7 +4,7 @@ import type { SponsorLevel, Sponsor } from '../types/database';
 
 // Sponsor level operations
 export async function getSponsorLevels() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('sponsor_levels')
     .select('*')
     .order('amount', { ascending: false });
@@ -26,7 +26,7 @@ export async function createSponsorLevel(level: Omit<SponsorLevel, 'id' | 'creat
 
 // Sponsor operations
 export async function getSponsors() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('sponsors')
     .select(`
       *,
