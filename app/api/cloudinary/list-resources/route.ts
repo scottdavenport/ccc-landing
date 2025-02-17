@@ -49,9 +49,17 @@ export async function GET() {
 
     console.log('Resources fetched:', {
       resourceCount: resources.resources?.length || 0,
+      timestamp: new Date().toISOString(),
       rate_limit_allowed: resources.rate_limit_allowed,
       rate_limit_remaining: resources.rate_limit_remaining,
-      rate_limit_reset_at: resources.rate_limit_reset_at,
+      rate_limit_reset_at: resources.rate_limit_reset_at
+    });
+
+    // Add cache control headers
+    const headers = new Headers({
+      'Cache-Control': 'no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
     });
 
     // Get all folders
@@ -62,11 +70,14 @@ export async function GET() {
       folderCount: folders.folders?.length || 0
     });
 
-    return NextResponse.json({
-      resources: resources.resources,
-      folders: folders.folders,
-      message: 'Successfully retrieved Cloudinary resources'
-    });
+    return NextResponse.json(
+      { 
+        resources: resources.resources, 
+        folders: folders.folders,
+        message: 'Resources fetched successfully'
+      },
+      { headers }
+    );
   } catch (error) {
     // Log detailed error information
     console.error('Cloudinary list resources error:', {

@@ -149,7 +149,11 @@ export default function PhotoGallery() {
     const fetchResources = async () => {
       try {
         console.log('Fetching Cloudinary resources...');
-        const listResponse = await fetch('/api/cloudinary/list-resources');
+        // Add timestamp to bust cache
+        const timestamp = new Date().getTime();
+        const listResponse = await fetch(`/api/cloudinary/list-resources?t=${timestamp}`, {
+          cache: 'no-store'
+        });
         
         // First check if the response is ok
         if (!listResponse.ok) {
