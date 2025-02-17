@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Sponsor, SponsorLevel } from '../types/database';
+import type { Database } from '../types/supabase';
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
@@ -8,11 +8,13 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error('Missing env.SUPABASE_SERVICE_ROLE_KEY');
 }
 
+
+
 /**
  * Initialize the Supabase admin client with service role key.
  * This client should only be used in server-side code for admin operations.
  */
-export const supabaseAdmin = createClient(
+export const supabaseAdmin = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   {
@@ -20,10 +22,13 @@ export const supabaseAdmin = createClient(
       persistSession: false,
       autoRefreshToken: false,
     },
+    db: {
+      schema: 'public'
+    }
   }
 );
 
-export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'created_at' | 'updated_at'>) {
+export async function createSponsor(sponsor: Omit<Database['public']['Tables']['sponsors']['Row'], 'id' | 'created_at' | 'updated_at'>) {
   try {
     console.log('Creating sponsor with data:', sponsor);
     
@@ -45,7 +50,7 @@ export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'created_at' |
     }
     
     console.log('Successfully created sponsor:', data);
-    return data as Sponsor;
+    return data as Database['public']['Tables']['sponsors']['Row'];
   } catch (error) {
     console.error('Error in createSponsor:', {
       error,
