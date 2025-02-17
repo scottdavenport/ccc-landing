@@ -1,32 +1,38 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
-}
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Missing env.SUPABASE_SERVICE_ROLE_KEY');
-}
-
-
-
 /**
  * Initialize the Supabase admin client with service role key.
  * This client should only be used in server-side code for admin operations.
  */
-export const supabaseAdmin = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-    db: {
-      schema: 'public'
-    }
+const getSupabaseAdmin = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl) {
+    throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
   }
-);
+  if (!supabaseServiceRoleKey) {
+    throw new Error('Missing env.SUPABASE_SERVICE_ROLE_KEY');
+  }
+
+  return createClient<Database>(
+    supabaseUrl,
+    supabaseServiceRoleKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+      db: {
+        schema: 'public'
+      }
+    }
+  );
+};
+
+// Create a new client for each request
+export const supabaseAdmin = getSupabaseAdmin();
 
 export async function createSponsor(sponsor: Omit<Database['public']['Tables']['sponsors']['Row'], 'id' | 'created_at' | 'updated_at'>) {
   try {

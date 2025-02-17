@@ -10,12 +10,24 @@ interface SponsorUploadMetadata {
   website?: string;
 }
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const configureCloudinary = () => {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error('Missing Cloudinary configuration');
+  }
+
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+  });
+};
+
+// Configure Cloudinary for each request
+configureCloudinary();
 
 /**
  * Handles sponsor image uploads with metadata
