@@ -19,6 +19,10 @@
   * Simplified sponsor image metadata storage
 
 ### Fixed
+- Fixed Supabase permissions in production
+  * Added proper RLS bypass for service role
+  * Ensured consistent RLS policies across environments
+  * Fixed permission denied errors for sponsor operations
 - Added Row Level Security (RLS) to all database tables
   * Enabled RLS on all public tables
   * Added public read access policies
