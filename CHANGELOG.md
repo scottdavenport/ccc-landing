@@ -23,11 +23,7 @@
   * Added proper RLS bypass for service role
   * Ensured consistent RLS policies across environments
   * Fixed permission denied errors for sponsor operations
-- Added Row Level Security (RLS) to all database tables
-  * Enabled RLS on all public tables
-  * Added public read access policies
-  * Added authenticated user write access policies
-  * Improved overall database security
+
 - Fixed Supabase integration
   * Added proper error handling and debugging
   * Improved schema validation
