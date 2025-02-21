@@ -1,0 +1,9 @@
+{
+    "description": "AI assistance for TypeScript files",
+    "pattern": "**/*.ts",
+    "ai_assist": "typescript",
+    "suggestions": true,
+    "linting": true,
+    "test_generation": true
+  }
+      

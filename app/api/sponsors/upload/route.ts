@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { getSupabaseAdmin } from '@/utils/supabase-admin';
+import { getSupabaseClient } from '@/utils/supabase-admin';
 
 interface SponsorUploadMetadata {
   name: string;
@@ -34,7 +34,7 @@ async function handleSponsorUpload(request: NextRequest) {
   try {
     // Initialize services for this request
     configureCloudinary();
-    const supabase = getSupabaseAdmin();
+    const supabase = getSupabaseClient();
 
     // Get form data
     const formData = await request.formData();

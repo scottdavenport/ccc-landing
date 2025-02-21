@@ -1,0 +1,10 @@
+{
+    "default_settings": {
+      "suggestions": true,
+      "linting": true,
+      "inline_explanations": true,
+      "test_generation": true,
+      "commit_message_generation": true
+    }
+  }
+      

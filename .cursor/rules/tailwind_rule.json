@@ -1,0 +1,8 @@
+{
+    "description": "AI assistance for Tailwind CSS",
+    "pattern": "**/*.css",
+    "ai_assist": "tailwind",
+    "suggestions": true,
+    "linting": true
+  }
+  

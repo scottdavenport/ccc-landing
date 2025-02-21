@@ -1,0 +1,7 @@
+{
+    "description": "Disable AI suggestions for environment files",
+    "pattern": "**/*.env",
+    "ai_assist": "secrets",
+    "suggestions": false
+  }
+  

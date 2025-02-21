@@ -1,0 +1,7 @@
+{
+    "description": "AI assistance for JSON configuration files",
+    "pattern": "**/*.json",
+    "ai_assist": "configuration",
+    "suggestions": false
+  }
+  

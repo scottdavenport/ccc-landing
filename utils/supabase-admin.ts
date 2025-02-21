@@ -45,7 +45,7 @@ export const getSupabaseAdmin = () => {
     console.error('Error verifying service role key:', e);
   }
 
-  // Create client with enhanced logging
+  // Create client with explicit service role configuration
   const client = createClient<Database>(
     supabaseUrl,
     supabaseServiceRoleKey,
@@ -53,6 +53,13 @@ export const getSupabaseAdmin = () => {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
+        detectSessionInUrl: false
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${supabaseServiceRoleKey}`
+        },
+        fetch: fetch
       },
       db: {
         schema: 'public'
@@ -64,14 +71,14 @@ export const getSupabaseAdmin = () => {
   return client;
 };
 
-// Create a new client for each request
-export const supabaseAdmin = getSupabaseAdmin();
+// Always create a fresh client for each request to avoid session sharing
+export const getSupabaseClient = () => getSupabaseAdmin();
 
 export async function createSponsor(sponsor: Omit<Database['public']['Tables']['sponsors']['Row'], 'id' | 'created_at' | 'updated_at'>) {
   try {
     console.log('Creating sponsor with data:', sponsor);
     
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseClient()
       .from('sponsors')
       .insert(sponsor)
       .select()

@@ -21,7 +21,10 @@ do
     fi
 done
 
-# Run build
+# Ensure NODE_ENV is set to development
+export NODE_ENV=development
+
+# Run build and dev server
 echo "Building application..."
 if npm run build; then
     echo "Build successful! Starting dev server..."
