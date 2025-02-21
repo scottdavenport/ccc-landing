@@ -39,14 +39,33 @@ async function handleSponsorUpload(request: NextRequest) {
     const supabase = getSupabaseClient();
     
     // Log client configuration and test table access
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Testing Supabase service role access...');
     
-    // Try a simple select to test access
+    // First verify we can access sponsor_levels
+    const { data: levelData, error: levelError } = await supabase
+      .from('sponsor_levels')
+      .select('id, name')
+      .limit(1);
+    
+    if (levelError) {
+      console.error('Error accessing sponsor_levels:', levelError);
+      throw new Error(`Service role access denied to sponsor_levels: ${levelError.message}`);
+    }
+    console.log('Successfully accessed sponsor_levels table');
+    
+    // Then verify we can access sponsors table
     const { data: testData, error: testError } = await supabase
       .from('sponsors')
       .select('id')
       .limit(1);
     
+    if (testError) {
+      console.error('Error accessing sponsors table:', testError);
+      throw new Error(`Service role access denied to sponsors: ${testError.message}`);
+    }
+    console.log('Successfully accessed sponsors table');
+    
+    console.log('Supabase service role access verified successfully');
     console.log('Supabase client configuration:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -134,17 +153,35 @@ async function handleSponsorUpload(request: NextRequest) {
       hasImageUrl: !!uploadResult.secure_url
     });
 
+    // Log current auth state
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Current auth state:', {
+      hasSession: !!session,
+      sessionError,
+      headers: supabase['supabaseUrl'], // Log the base URL to verify config
+      serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10) + '...',
+    });
+
+    // Create headers for service role
+    const serviceRoleHeaders = {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      'x-supabase-auth-role': 'service_role'
+    };
+
     // Try a dry-run select with explicit service role header
     try {
       const { data: levelCheck, error: levelError } = await supabase
         .from('sponsor_levels')
         .select('id')
         .eq('id', metadata.level)
-        .single();
+        .single()
+        .headers(serviceRoleHeaders);
       
       console.log('Level check result:', { 
         hasLevel: !!levelCheck,
-        error: levelError
+        error: levelError,
+        headers: serviceRoleHeaders
       });
       
       if (levelError) {
@@ -156,6 +193,8 @@ async function handleSponsorUpload(request: NextRequest) {
     }
 
     // Insert sponsor with UUID and explicit service role headers
+    console.log('Attempting sponsor insert with headers:', serviceRoleHeaders);
+    
     const { data, error } = await supabase
       .from('sponsors')
       .insert({
@@ -165,9 +204,10 @@ async function handleSponsorUpload(request: NextRequest) {
         year: metadata.year,
         cloudinary_public_id: uploadResult.public_id,
         image_url: uploadResult.secure_url,
-      })
+      }, { headers: serviceRoleHeaders })
       .select('*')
-      .single();
+      .single()
+      .headers(serviceRoleHeaders);
 
     if (error) {
       console.error('Supabase insert error:', {

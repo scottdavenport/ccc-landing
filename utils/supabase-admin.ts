@@ -67,9 +67,33 @@ export const getSupabaseAdmin = () => {
           'apikey': supabaseServiceRoleKey,
           'Authorization': `Bearer ${supabaseServiceRoleKey}`,
           // Explicitly request service role access
-          'x-supabase-auth-role': 'service_role'
+          'x-supabase-auth-role': 'service_role',
+          // Additional headers for debugging
+          'x-client-info': `@supabase/supabase-js-admin`,
+          'x-client-request': 'true'
         },
-        fetch: globalThis.fetch  // Use globalThis.fetch for Edge compatibility
+        fetch: async (url, options = {}) => {
+          console.log('Supabase request:', {
+            url: url.toString(),
+            method: options.method,
+            headers: options.headers,
+          });
+          const response = await globalThis.fetch(url, options);
+          if (!response.ok) {
+            console.error('Supabase request failed:', {
+              status: response.status,
+              statusText: response.statusText,
+              headers: Object.fromEntries(response.headers.entries()),
+            });
+            try {
+              const errorBody = await response.clone().json();
+              console.error('Error response body:', errorBody);
+            } catch (e) {
+              console.error('Could not parse error response body');
+            }
+          }
+          return response;
+        }
       },
       db: {
         schema: 'public'
