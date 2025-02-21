@@ -16,6 +16,9 @@ BEGIN;
     -- Log the role for debugging
     RAISE NOTICE 'Current role: %', current_role;
     
+    -- Create a savepoint before our test
+    SAVEPOINT pre_test;
+    
     -- Check if we have access to sponsors table
     BEGIN
       -- Try to insert a test record (will be rolled back)
@@ -38,6 +41,7 @@ BEGIN;
     
     -- Rollback the test insert
     ROLLBACK TO pre_test;
+    RELEASE SAVEPOINT pre_test;
     
     -- Return the result
     RETURN has_access;
@@ -46,7 +50,4 @@ BEGIN;
 
   -- Grant execute permission to service_role
   GRANT EXECUTE ON FUNCTION public.check_service_role_access() TO service_role;
-
-  -- Also create a savepoint we can rollback to
-  SAVEPOINT pre_test;
 COMMIT;
