@@ -38,15 +38,16 @@ async function handleSponsorUpload(request: NextRequest) {
     // Get Supabase client and verify service role
     const supabase = getSupabaseClient();
     
-    // Log full client configuration for debugging
+    // Log client configuration for debugging
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     console.log('Supabase client configuration:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
-      headers: supabase.rest.headers, // Log headers being sent
       auth: {
         hasAdmin: !!supabase.auth.admin,
-        session: await supabase.auth.getSession(),
+        hasSession: !!session,
+        sessionError,
       }
     });
 
@@ -145,8 +146,7 @@ async function handleSponsorUpload(request: NextRequest) {
       
       console.log('Level check result:', { 
         hasLevel: !!levelCheck,
-        error: levelError,
-        headers: supabase.rest.headers // Log headers for this specific request
+        error: levelError
       });
       
       if (levelError) {
