@@ -134,19 +134,6 @@ async function handleSponsorUpload(request: NextRequest) {
       hasImageUrl: !!uploadResult.secure_url
     });
 
-    // Verify service role access with explicit RLS test
-    try {
-      const { data: rls_test, error: rls_error } = await supabase.rpc('check_service_role_access');
-      console.log('Service role access check:', { result: rls_test, error: rls_error });
-      
-      if (rls_error) {
-        throw new Error(`Service role access check failed: ${rls_error.message}`);
-      }
-    } catch (e) {
-      console.error('Service role verification failed:', e);
-      throw e;
-    }
-    
     // Try a dry-run select with explicit service role header
     try {
       const { data: levelCheck, error: levelError } = await supabase
@@ -168,9 +155,11 @@ async function handleSponsorUpload(request: NextRequest) {
       throw e;
     }
 
+    // Insert sponsor with UUID and explicit service role headers
     const { data, error } = await supabase
       .from('sponsors')
       .insert({
+        id: crypto.randomUUID(), // Generate UUID for the id field
         name: metadata.name,
         level: metadata.level,
         year: metadata.year,
