@@ -38,8 +38,15 @@ async function handleSponsorUpload(request: NextRequest) {
     // Get Supabase client and verify service role
     const supabase = getSupabaseClient();
     
-    // Log client configuration for debugging
+    // Log client configuration and test table access
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    // Try a simple select to test access
+    const { data: testData, error: testError } = await supabase
+      .from('sponsors')
+      .select('id')
+      .limit(1);
+    
     console.log('Supabase client configuration:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -48,6 +55,10 @@ async function handleSponsorUpload(request: NextRequest) {
         hasAdmin: !!supabase.auth.admin,
         hasSession: !!session,
         sessionError,
+      },
+      tableAccess: {
+        hasAccess: !!testData,
+        error: testError
       }
     });
 
