@@ -45,7 +45,7 @@ export const getSupabaseAdmin = () => {
     console.error('Error verifying service role key:', e);
   }
 
-  // Create client with explicit service role configuration
+  // Create client with strict Edge Function configuration
   const client = createClient<Database>(
     supabaseUrl,
     supabaseServiceRoleKey,
@@ -53,13 +53,20 @@ export const getSupabaseAdmin = () => {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
-        detectSessionInUrl: false
+        detectSessionInUrl: false,
+        flowType: 'pkce',  // More secure flow type
+        storage: {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {}
+        }
       },
       global: {
         headers: {
-          Authorization: `Bearer ${supabaseServiceRoleKey}`
+          Authorization: `Bearer ${supabaseServiceRoleKey}`,
+          apikey: supabaseServiceRoleKey  // Set both headers explicitly
         },
-        fetch: fetch
+        fetch: globalThis.fetch  // Use globalThis.fetch for Edge compatibility
       },
       db: {
         schema: 'public'
