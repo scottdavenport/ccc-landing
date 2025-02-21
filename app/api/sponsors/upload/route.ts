@@ -34,7 +34,21 @@ async function handleSponsorUpload(request: NextRequest) {
   try {
     // Initialize services for this request
     configureCloudinary();
+    
+    // Get Supabase client and verify service role
     const supabase = getSupabaseClient();
+    
+    // Log full client configuration for debugging
+    console.log('Supabase client configuration:', {
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
+      headers: supabase.rest.headers, // Log headers being sent
+      auth: {
+        hasAdmin: !!supabase.auth.admin,
+        session: await supabase.auth.getSession(),
+      }
+    });
 
     // Get form data
     const formData = await request.formData();
@@ -108,17 +122,39 @@ async function handleSponsorUpload(request: NextRequest) {
       hasImageUrl: !!uploadResult.secure_url
     });
 
-    // Try a dry-run select first
+    // Verify service role access with explicit RLS test
     try {
-      const { data: levelCheck } = await supabase
+      const { data: rls_test, error: rls_error } = await supabase.rpc('check_service_role_access');
+      console.log('Service role access check:', { result: rls_test, error: rls_error });
+      
+      if (rls_error) {
+        throw new Error(`Service role access check failed: ${rls_error.message}`);
+      }
+    } catch (e) {
+      console.error('Service role verification failed:', e);
+      throw e;
+    }
+    
+    // Try a dry-run select with explicit service role header
+    try {
+      const { data: levelCheck, error: levelError } = await supabase
         .from('sponsor_levels')
         .select('id')
         .eq('id', metadata.level)
         .single();
       
-      console.log('Level check result:', { hasLevel: !!levelCheck });
+      console.log('Level check result:', { 
+        hasLevel: !!levelCheck,
+        error: levelError,
+        headers: supabase.rest.headers // Log headers for this specific request
+      });
+      
+      if (levelError) {
+        throw new Error(`Failed to verify sponsor level: ${levelError.message}`);
+      }
     } catch (e) {
       console.error('Error checking sponsor level:', e);
+      throw e;
     }
 
     const { data, error } = await supabase
