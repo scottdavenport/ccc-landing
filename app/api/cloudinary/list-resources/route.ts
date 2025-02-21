@@ -65,11 +65,18 @@ export async function GET() {
     // Skip folder fetch to reduce API calls
     const folders = { folders: [] };
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       resources: resources.resources,
       folders: folders.folders,
       message: 'Successfully retrieved Cloudinary resources'
     });
+    
+    // Add cache control headers to prevent stale data
+    response.headers.set('Cache-Control', 'no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error) {
     // Log detailed error information
     console.error('Cloudinary list resources error:', {
