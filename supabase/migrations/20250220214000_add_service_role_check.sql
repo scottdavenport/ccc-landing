@@ -16,10 +16,7 @@ BEGIN;
     -- Log the role for debugging
     RAISE NOTICE 'Current role: %', current_role;
     
-    -- Create a savepoint before our test
-    SAVEPOINT pre_test;
-    
-    -- Check if we have access to sponsors table
+    -- Check if we have access to sponsors table using a subtransaction
     BEGIN
       -- Try to insert a test record (will be rolled back)
       WITH test_insert AS (
@@ -33,15 +30,20 @@ BEGIN;
       -- If we get here, we have access
       RAISE NOTICE 'Insert test succeeded';
       has_access := true;
-    EXCEPTION WHEN OTHERS THEN
-      -- Log the error
-      RAISE NOTICE 'Insert test failed: % %', SQLERRM, SQLSTATE;
-      has_access := false;
+      
+      -- Rollback the test insert
+      RAISE EXCEPTION 'Rollback test transaction';
+    EXCEPTION 
+      WHEN OTHERS THEN
+        -- If this was our intentional rollback, set access to true
+        IF SQLERRM = 'Rollback test transaction' THEN
+          has_access := true;
+        ELSE
+          -- Log the error for other cases
+          RAISE NOTICE 'Insert test failed: % %', SQLERRM, SQLSTATE;
+          has_access := false;
+        END IF;
     END;
-    
-    -- Rollback the test insert
-    ROLLBACK TO pre_test;
-    RELEASE SAVEPOINT pre_test;
     
     -- Return the result
     RETURN has_access;
