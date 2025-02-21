@@ -63,8 +63,11 @@ export const getSupabaseAdmin = () => {
       },
       global: {
         headers: {
-          Authorization: `Bearer ${supabaseServiceRoleKey}`,
-          apikey: supabaseServiceRoleKey  // Set both headers explicitly
+          // For service role access, we need to set both headers
+          'apikey': supabaseServiceRoleKey,
+          'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+          // Explicitly request service role access
+          'x-supabase-auth-role': 'service_role'
         },
         fetch: globalThis.fetch  // Use globalThis.fetch for Edge compatibility
       },
