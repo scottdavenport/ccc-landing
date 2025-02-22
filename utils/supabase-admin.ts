@@ -74,7 +74,9 @@ export const getSupabaseAdmin = () => {
           'x-client-info': `@supabase/supabase-js-admin`,
           'x-client-request': 'true',
           // Ensure content type is set
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // Explicitly bypass RLS
+          'x-supabase-bypass-rls': 'true'
         },
         fetch: async (url, options: RequestInit = {}) => {
           console.log('Supabase request:', {
