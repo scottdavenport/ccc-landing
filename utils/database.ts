@@ -1,10 +1,10 @@
 import { supabase } from './supabase';
-import { supabaseAdmin } from './supabase-admin';
+import { getSupabaseClient } from './supabase-admin';
 import type { Database } from '../types/supabase';
 
 // Sponsor level operations
 export async function getSponsorLevels() {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseClient()
     .from('sponsor_levels')
     .select('*')
     .order('amount', { ascending: false });
@@ -14,7 +14,7 @@ export async function getSponsorLevels() {
 }
 
 export async function createSponsorLevel(level: Omit<Database['public']['Tables']['sponsor_levels']['Row'], 'id' | 'created_at' | 'updated_at'>) {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseClient()
     .from('sponsor_levels')
     .insert(level)
     .select()
@@ -26,7 +26,7 @@ export async function createSponsorLevel(level: Omit<Database['public']['Tables'
 
 // Sponsor operations
 export async function getSponsors() {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseClient()
     .from('sponsors')
     .select(`
       *,

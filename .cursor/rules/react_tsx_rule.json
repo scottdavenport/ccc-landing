@@ -1,0 +1,9 @@
+{
+    "description": "AI assistance for React TSX files",
+    "pattern": "**/*.tsx",
+    "ai_assist": "react",
+    "suggestions": true,
+    "linting": true,
+    "test_generation": true
+  }
+  

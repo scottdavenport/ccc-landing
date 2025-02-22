@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { getSupabaseAdmin } from '@/utils/supabase-admin';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { Database } from '@/types/supabase';
+import { Session } from '@supabase/supabase-js';
 
 interface SponsorUploadMetadata {
   name: string;
@@ -26,15 +30,73 @@ const configureCloudinary = () => {
 };
 
 // Use a single function to handle the request
-async function handleSponsorUpload(request: NextRequest) {
+async function handleSponsorUpload(request: NextRequest): Promise<NextResponse> {
   let file: File | null = null;
   let metadataStr: string | null = null;
   let uploadResult: any = null;
+  let session: Session | null = null;
+  let sessionError: Error | null = null;
 
   try {
     // Initialize services for this request
     configureCloudinary();
-    const supabase = getSupabaseAdmin();
+    
+    // Get admin client for database operations
+    const adminClient = getSupabaseAdmin();
+    
+    // Log client configuration and test table access
+    console.log('Testing Supabase admin access...');
+    console.log('Admin client headers:', {
+      hasAuthHeader: !!adminClient['headers']?.['Authorization'],
+      hasApiKey: !!adminClient['headers']?.['apikey'],
+      hasServiceRole: !!adminClient['headers']?.['x-supabase-auth-role']
+    });
+    
+    // First verify we can access sponsor_levels
+    const { data: levelData, error: levelError } = await adminClient
+      .from('sponsor_levels')
+      .select('id, name')
+      .limit(1);
+    
+    if (levelError) {
+      console.error('Error accessing sponsor_levels:', levelError);
+      return NextResponse.json(
+        { error: 'Database access error', details: levelError.message },
+        { status: 403 }
+      );
+    }
+    console.log('Successfully accessed sponsor_levels table, data:', levelData);
+    
+    // Then verify we can access sponsors table
+    const { data: testSponsorData, error: testError } = await adminClient
+      .from('sponsors')
+      .select('id')
+      .limit(1);
+    
+    if (testError) {
+      console.error('Error accessing sponsors table:', testError);
+      return NextResponse.json(
+        { error: 'Database access error', details: testError.message },
+        { status: 403 }
+      );
+    }
+    console.log('Successfully accessed sponsors table, data:', testSponsorData);
+    
+    console.log('Supabase admin access verified successfully');
+    console.log('Supabase client configuration:', {
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
+      auth: {
+        hasAdmin: !!adminClient.auth.admin,
+        hasSession: !!session,
+        sessionError,
+      },
+      tableAccess: {
+        hasAccess: !!testSponsorData,
+        error: testError
+      }
+    });
 
     // Get form data
     const formData = await request.formData();
@@ -79,25 +141,37 @@ async function handleSponsorUpload(request: NextRequest) {
       throw new Error('Failed to upload to Cloudinary');
     }
 
-    // Log Supabase client state before insert
-    console.log('Supabase client check before insert:', {
+    // Log final client state before database operations
+    console.log('Final client state before database operations:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10),
-      auth: supabase.auth.admin !== undefined ? 'Has admin API' : 'No admin API'
+      auth: {
+        hasAdmin: !!adminClient.auth.admin,
+        hasSession: !!session,
+        sessionError,
+      }
     });
 
-    // Verify database connection
-    try {
-      const { error: healthError } = await supabase.from('sponsor_levels').select('count').single();
-      if (healthError) {
-        console.error('Database health check failed:', healthError);
-      } else {
-        console.log('Database connection verified');
-      }
-    } catch (e) {
-      console.error('Error checking database health:', e);
+    // Then verify we can write with admin client
+    const testSponsor = { name: '_test_', level: '_test_', year: 2025, image_url: '_test_' };
+    const { error: writeError } = await adminClient
+      .from('sponsors')
+      .insert([testSponsor])
+      .select()
+      .single();
+
+    if (writeError) {
+      console.error('Database write check failed:', writeError);
+      throw new Error(`Database write check failed: ${writeError.message}`);
     }
+    console.log('Database write access verified');
+
+    // Clean up test data
+    await adminClient
+      .from('sponsors')
+      .delete()
+      .match(testSponsor);
 
     // Create sponsor in database
     console.log('Attempting to insert sponsor:', {
@@ -108,29 +182,45 @@ async function handleSponsorUpload(request: NextRequest) {
       hasImageUrl: !!uploadResult.secure_url
     });
 
-    // Try a dry-run select first
+    // Verify the sponsor level exists
     try {
-      const { data: levelCheck } = await supabase
+      const { data: levelCheck, error: levelError } = await adminClient
         .from('sponsor_levels')
         .select('id')
-        .eq('id', metadata.level)
+        .eq('name', metadata.level)
         .single();
       
-      console.log('Level check result:', { hasLevel: !!levelCheck });
+      console.log('Level check result:', { 
+        hasLevel: !!levelCheck,
+        error: levelError
+      });
+      
+      if (levelError) {
+        throw new Error(`Failed to verify sponsor level: ${levelError.message}`);
+      }
+
+      if (!levelCheck) {
+        throw new Error(`Sponsor level not found: ${metadata.level}`);
+      }
     } catch (e) {
       console.error('Error checking sponsor level:', e);
+      throw e;
     }
 
-    const { data, error } = await supabase
+    // Insert sponsor with admin client
+    console.log('Attempting sponsor insert with admin client');
+    
+    const { data, error } = await adminClient
       .from('sponsors')
       .insert({
         name: metadata.name,
         level: metadata.level,
         year: metadata.year,
-        cloudinary_public_id: uploadResult.public_id,
+        cloudinary_id: uploadResult.public_id,
         image_url: uploadResult.secure_url,
+        website: metadata.website
       })
-      .select('*')
+      .select()
       .single();
 
     if (error) {
@@ -143,8 +233,17 @@ async function handleSponsorUpload(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json(data);
+    if (!data) {
+      throw new Error('No data returned from insert');
+    }
+
+    return NextResponse.json({ 
+      message: 'Upload successful',
+      sponsor: data
+    });
+
   } catch (error) {
+    // Log error details
     console.error('Upload error details:', {
       error,
       errorMessage: error instanceof Error ? error.message : 'Unknown error',
@@ -154,12 +253,13 @@ async function handleSponsorUpload(request: NextRequest) {
       cloudinaryConfig: {
         cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
         hasApiKey: !!process.env.CLOUDINARY_API_KEY,
-        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
+        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET
       },
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      uploadResult: uploadResult ? 'Present' : 'Missing',
+      uploadResult: uploadResult ? 'Present' : 'Missing'
     });
 
+    // Return error response
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -168,6 +268,6 @@ async function handleSponsorUpload(request: NextRequest) {
 }
 
 // Export the route handler
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   return handleSponsorUpload(request);
 }

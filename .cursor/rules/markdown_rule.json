@@ -1,0 +1,7 @@
+{
+    "description": "AI assistance for Markdown documentation",
+    "pattern": "**/*.md",
+    "ai_assist": "documentation",
+    "suggestions": true
+  }
+  

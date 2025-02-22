@@ -1,0 +1,57 @@
+
+{
+  "rules": [
+    {
+      "pattern": ".*",
+      "exclusions": [
+        "node_modules",
+        "build",
+        "dist",
+        "out",
+        ".git",
+        ".next",
+        "coverage"
+      ]
+    },
+    {
+      "pattern": "**/*.tsx",
+      "ai_assist": "react",
+      "suggestions": true,
+      "linting": true,
+      "test_generation": true
+    },
+    {
+      "pattern": "**/*.ts",
+      "ai_assist": "typescript",
+      "suggestions": true,
+      "linting": true
+    },
+    {
+      "pattern": "**/*.json",
+      "ai_assist": "configuration",
+      "suggestions": false
+    },
+    {
+      "pattern": "**/*.css",
+      "ai_assist": "tailwind",
+      "suggestions": true,
+      "linting": true
+    },
+    {
+      "pattern": "**/*.md",
+      "ai_assist": "documentation"
+    },
+    {
+      "pattern": "**/*.env",
+      "ai_assist": "secrets",
+      "suggestions": false
+    }
+  ],
+  "default_settings": {
+    "suggestions": true,
+    "linting": true,
+    "inline_explanations": true,
+    "test_generation": true,
+    "commit_message_generation": true
+  }
+}

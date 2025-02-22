@@ -1,5 +1,8 @@
+import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 import type { Database } from '../types/supabase';
+import type { CookieOptions } from '@supabase/ssr';
 
 /**
  * Initialize the Supabase admin client with service role key.
@@ -28,50 +31,81 @@ export const getSupabaseAdmin = () => {
     throw new Error('Missing env.SUPABASE_SERVICE_ROLE_KEY');
   }
 
-  // Verify the JWT role
-  try {
-    const jwt = supabaseServiceRoleKey.split('.')[1];
-    const payload = JSON.parse(Buffer.from(jwt, 'base64').toString());
-    console.log('Service key role verification:', {
-      role: payload.role,
-      iss: payload.iss,
-      exp: new Date(payload.exp * 1000).toISOString()
-    });
-    
-    if (payload.role !== 'service_role') {
-      console.error('WARNING: Service key does not have service_role!');
-    }
-  } catch (e) {
-    console.error('Error verifying service role key:', e);
-  }
-
-  // Create client with enhanced logging
+  // Create client with service role configuration
   const client = createClient<Database>(
     supabaseUrl,
     supabaseServiceRoleKey,
     {
       auth: {
-        persistSession: false,
         autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
       },
-      db: {
-        schema: 'public'
+      global: {
+        headers: {
+          Authorization: `Bearer ${supabaseServiceRoleKey}`,
+          apikey: supabaseServiceRoleKey
+        }
       }
     }
   );
+
+  // Log all requests and responses
+  const supabaseUrlObj = new URL(supabaseUrl);
+  const originalFetch = global.fetch;
+  global.fetch = async (url: URL | RequestInfo, init?: RequestInit) => {
+    if (url.toString().startsWith(supabaseUrlObj.origin)) {
+      console.log('Supabase request:', {
+        url: url.toString(),
+        method: init?.method,
+        headers: init?.headers,
+      });
+
+      // Ensure service role headers are present
+      const headers = new Headers(init?.headers);
+      headers.set('Authorization', `Bearer ${supabaseServiceRoleKey}`);
+      headers.set('apikey', supabaseServiceRoleKey);
+      init = { ...init, headers };
+    }
+
+    const response = await originalFetch(url, init);
+    
+    if (url.toString().startsWith(supabaseUrlObj.origin) && !response.ok) {
+      console.error('Supabase request failed:', {
+        url: url.toString(),
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+      try {
+        const errorBody = await response.clone().json();
+        console.error('Error response body:', errorBody);
+      } catch (e) {
+        console.error('Could not parse error response body');
+      }
+    }
+    
+    return response;
+  };
 
   console.log('Supabase admin client initialized successfully');
   return client;
 };
 
-// Create a new client for each request
-export const supabaseAdmin = getSupabaseAdmin();
+/**
+ * Get a Supabase client for the current request.
+ * This client will use the admin client for now until we implement proper auth.
+ */
+export const getSupabaseClient = () => getSupabaseAdmin();
 
+/**
+ * Create a new sponsor in the database.
+ */
 export async function createSponsor(sponsor: Omit<Database['public']['Tables']['sponsors']['Row'], 'id' | 'created_at' | 'updated_at'>) {
   try {
     console.log('Creating sponsor with data:', sponsor);
     
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseClient()
       .from('sponsors')
       .insert(sponsor)
       .select()
