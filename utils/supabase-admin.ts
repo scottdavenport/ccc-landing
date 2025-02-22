@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 import type { Database } from '../types/supabase';
+import type { CookieOptions } from '@supabase/ssr';
 
 /**
  * Initialize the Supabase admin client with service role key.
@@ -47,67 +49,95 @@ export const getSupabaseAdmin = () => {
     console.error('Error verifying service role key:', e);
   }
 
-  // Create client with strict Edge Function configuration
+  // Create client with service role configuration
   const client = createClient<Database>(
     supabaseUrl,
     supabaseServiceRoleKey,
     {
       auth: {
-        persistSession: false,
         autoRefreshToken: false,
-        detectSessionInUrl: false,
-        flowType: 'pkce',  // More secure flow type
-        storage: {
-          getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {}
-        }
-      },
-      global: {
-        headers: {
-          // For service role access, we need to set both headers
-          'apikey': supabaseServiceRoleKey,
-          'Authorization': `Bearer ${supabaseServiceRoleKey}`,
-          // Explicitly request service role access
-          'x-supabase-auth-role': 'service_role',
-          // Additional headers for debugging
-          'x-client-info': `@supabase/supabase-js-admin`,
-          'x-client-request': 'true',
-          // Ensure content type is set
-          'Content-Type': 'application/json',
-          // Explicitly bypass RLS
-          'x-supabase-bypass-rls': 'true'
-        },
-        fetch: async (url, options: RequestInit = {}) => {
-          console.log('Supabase request:', {
-            url: url.toString(),
-            method: options.method,
-            headers: options.headers,
-          });
-          const response = await globalThis.fetch(url, options);
-          if (!response.ok) {
-            console.error('Supabase request failed:', {
-              status: response.status,
-              statusText: response.statusText,
-              headers: Object.fromEntries(response.headers.entries()),
-            });
-            try {
-              const errorBody = await response.clone().json();
-              console.error('Error response body:', errorBody);
-            } catch (e) {
-              console.error('Could not parse error response body');
-            }
-          }
-          return response;
-        }
+        persistSession: false,
+        detectSessionInUrl: false
       },
       db: {
         schema: 'public'
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${supabaseServiceRoleKey}`,
+          apikey: supabaseServiceRoleKey
+        }
       }
     }
   );
 
+  // Add request logging
+  const { fetch: originalFetch } = client;
+  client.fetch = async (url: URL | string, options: RequestInit = {}) => {
+    console.log('Supabase request:', {
+      url: url.toString(),
+      method: options.method,
+      headers: options.headers,
+    });
+    
+    // Add service role headers
+    const headers = new Headers(options.headers);
+    headers.set('Authorization', `Bearer ${supabaseServiceRoleKey}`);
+    headers.set('apikey', supabaseServiceRoleKey);
+    options.headers = headers;
+    
+    const response = await originalFetch(url, options);
+    if (!response.ok) {
+      console.error('Supabase request failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+      try {
+        const errorBody = await response.clone().json();
+        console.error('Error response body:', errorBody);
+      } catch (e) {
+        console.error('Could not parse error response body');
+      }
+    }
+    return response;
+  };
+
   console.log('Supabase admin client initialized successfully');
+  return client;
+}
+
+// Always create a fresh client for each request to avoid session sharing
+export const getSupabaseClient = () => {
+  const cookieStore = cookies();
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            // Handle error
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.delete({ name, ...options });
+          } catch (error) {
+            // Handle error
+          }
+        },
+      },
+    }
+  );
+};
+
+
   return client;
 };
 
