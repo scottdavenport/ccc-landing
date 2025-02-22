@@ -45,7 +45,7 @@ export const getSupabaseAdmin = () => {
     console.error('Error verifying service role key:', e);
   }
 
-  // Create client with enhanced logging
+  // Create client with enhanced logging and explicit headers
   const client = createClient<Database>(
     supabaseUrl,
     supabaseServiceRoleKey,
@@ -56,9 +56,20 @@ export const getSupabaseAdmin = () => {
       },
       db: {
         schema: 'public'
+      },
+      global: {
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+          'apikey': supabaseServiceRoleKey
+        }
       }
     }
   );
+
+  // Verify the client has admin access
+  if (!client.auth.admin) {
+    throw new Error('Supabase client does not have admin access. Check service role key.');
+  }
 
   console.log('Supabase admin client initialized successfully');
   return client;
