@@ -124,24 +124,53 @@ async function handleSponsorUpload(request: NextRequest) {
       throw new Error('Failed to upload to Cloudinary');
     }
 
-    // Log Supabase client state before insert
+    // Log Supabase client state and verify connection
     console.log('Supabase client check before insert:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10),
-      auth: supabase.auth.admin !== undefined ? 'Has admin API' : 'No admin API'
+      auth: supabase.auth.admin !== undefined ? 'Has admin API' : 'No admin API',
+      headers: supabase['headers'] || 'No headers available'
     });
 
-    // Verify database connection
+    // Verify database connection and permissions
     try {
-      const { error: healthError } = await supabase.from('sponsor_levels').select('count').single();
+      // First verify we can read (public access)
+      const { data: levelCheck, error: healthError } = await supabase
+        .from('sponsor_levels')
+        .select('id')
+        .limit(1)
+        .single();
+
       if (healthError) {
-        console.error('Database health check failed:', healthError);
-      } else {
-        console.log('Database connection verified');
+        console.error('Database read check failed:', healthError);
+        throw new Error(`Database read check failed: ${healthError.message}`);
       }
+      console.log('Database read access verified');
+
+      // Then verify we can write (service role access)
+      const testData = { name: '_test_', level: '_test_', year: 2025, image_url: '_test_' };
+      const { error: writeError } = await supabase
+        .from('sponsors')
+        .insert([testData])
+        .select()
+        .single();
+
+      if (writeError) {
+        console.error('Database write check failed:', writeError);
+        throw new Error(`Database write check failed: ${writeError.message}`);
+      }
+      console.log('Database write access verified');
+
+      // Clean up test data
+      await supabase
+        .from('sponsors')
+        .delete()
+        .match(testData);
+
     } catch (e) {
-      console.error('Error checking database health:', e);
+      console.error('Error during database permission check:', e);
+      throw e;
     }
 
     // Create sponsor in database
