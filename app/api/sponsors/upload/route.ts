@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { getSupabaseClient } from '@/utils/supabase-admin';
+import { getSupabaseAdmin } from '@/utils/supabase-admin';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { Database } from '@/types/supabase';
+import { Session } from '@supabase/supabase-js';
 
 interface SponsorUploadMetadata {
   name: string;
@@ -26,52 +30,83 @@ const configureCloudinary = () => {
 };
 
 // Use a single function to handle the request
-async function handleSponsorUpload(request: NextRequest) {
+async function handleSponsorUpload(request: NextRequest): Promise<NextResponse> {
   let file: File | null = null;
   let metadataStr: string | null = null;
   let uploadResult: any = null;
+  let session: Session | null = null;
+  let sessionError: Error | null = null;
 
   try {
     // Initialize services for this request
     configureCloudinary();
     
-    // Get Supabase client and verify service role
-    const supabase = getSupabaseClient();
+    // Get the user session
+    const supabase = createRouteHandlerClient<Database>({ cookies });
+    try {
+      const { data: { session: userSession }, error } = await supabase.auth.getSession();
+      session = userSession;
+      sessionError = error;
+      
+      if (error) {
+        console.error('Session error:', error);
+        return NextResponse.json(
+          { error: 'Authentication error', details: error.message },
+          { status: 401 }
+        );
+      }
+
+      if (!session) {
+        return NextResponse.json(
+          { error: 'Unauthorized - No session found' },
+          { status: 401 }
+        );
+      }
+    } catch (e) {
+      console.error('Error getting session:', e);
+      return NextResponse.json(
+        { error: 'Internal server error during authentication' },
+        { status: 500 }
+      );
+    }
+
+    // Get admin client for database operations
+    const adminClient = getSupabaseAdmin();
     
     // Log client configuration and test table access
-    console.log('Testing Supabase service role access...');
+    console.log('Testing Supabase admin access...');
     
     // First verify we can access sponsor_levels
-    const { data: levelData, error: levelError } = await supabase
+    const { data: levelData, error: levelError } = await adminClient
       .from('sponsor_levels')
       .select('id, name')
       .limit(1);
     
     if (levelError) {
       console.error('Error accessing sponsor_levels:', levelError);
-      throw new Error(`Service role access denied to sponsor_levels: ${levelError.message}`);
+      throw new Error(`Admin access denied to sponsor_levels: ${levelError.message}`);
     }
     console.log('Successfully accessed sponsor_levels table');
     
     // Then verify we can access sponsors table
-    const { data: testData, error: testError } = await supabase
+    const { data: testData, error: testError } = await adminClient
       .from('sponsors')
       .select('id')
       .limit(1);
     
     if (testError) {
       console.error('Error accessing sponsors table:', testError);
-      throw new Error(`Service role access denied to sponsors: ${testError.message}`);
+      throw new Error(`Admin access denied to sponsors: ${testError.message}`);
     }
     console.log('Successfully accessed sponsors table');
     
-    console.log('Supabase service role access verified successfully');
+    console.log('Supabase admin access verified successfully');
     console.log('Supabase client configuration:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length,
       auth: {
-        hasAdmin: !!supabase.auth.admin,
+        hasAdmin: !!adminClient.auth.admin,
         hasSession: !!session,
         sessionError,
       },
@@ -124,54 +159,37 @@ async function handleSponsorUpload(request: NextRequest) {
       throw new Error('Failed to upload to Cloudinary');
     }
 
-    // Log Supabase client state and verify connection
-    console.log('Supabase client check before insert:', {
+    // Log final client state before database operations
+    console.log('Final client state before database operations:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10),
-      auth: supabase.auth.admin !== undefined ? 'Has admin API' : 'No admin API',
-      headers: supabase['headers'] || 'No headers available'
+      auth: {
+        hasAdmin: !!adminClient.auth.admin,
+        hasSession: !!session,
+        sessionError,
+      }
     });
 
-    // Verify database connection and permissions
-    try {
-      // First verify we can read (public access)
-      const { data: levelCheck, error: healthError } = await supabase
-        .from('sponsor_levels')
-        .select('id')
-        .limit(1)
-        .single();
+    // Then verify we can write with admin client
+    const testSponsor = { name: '_test_', level: '_test_', year: 2025, image_url: '_test_' };
+    const { error: writeError } = await adminClient
+      .from('sponsors')
+      .insert([testSponsor])
+      .select()
+      .single();
 
-      if (healthError) {
-        console.error('Database read check failed:', healthError);
-        throw new Error(`Database read check failed: ${healthError.message}`);
-      }
-      console.log('Database read access verified');
-
-      // Then verify we can write (service role access)
-      const testData = { name: '_test_', level: '_test_', year: 2025, image_url: '_test_' };
-      const { error: writeError } = await supabase
-        .from('sponsors')
-        .insert([testData])
-        .select()
-        .single();
-
-      if (writeError) {
-        console.error('Database write check failed:', writeError);
-        throw new Error(`Database write check failed: ${writeError.message}`);
-      }
-      console.log('Database write access verified');
-
-      // Clean up test data
-      await supabase
-        .from('sponsors')
-        .delete()
-        .match(testData);
-
-    } catch (e) {
-      console.error('Error during database permission check:', e);
-      throw e;
+    if (writeError) {
+      console.error('Database write check failed:', writeError);
+      throw new Error(`Database write check failed: ${writeError.message}`);
     }
+    console.log('Database write access verified');
+
+    // Clean up test data
+    await adminClient
+      .from('sponsors')
+      .delete()
+      .match(testSponsor);
 
     // Create sponsor in database
     console.log('Attempting to insert sponsor:', {
@@ -182,61 +200,46 @@ async function handleSponsorUpload(request: NextRequest) {
       hasImageUrl: !!uploadResult.secure_url
     });
 
-    // Log current auth state
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    console.log('Current auth state:', {
-      hasSession: !!session,
-      sessionError,
-      headers: supabase['supabaseUrl'], // Log the base URL to verify config
-      serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10) + '...',
-    });
-
-    // Create headers for service role
-    const serviceRoleHeaders = {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'x-supabase-auth-role': 'service_role'
-    };
-
-    // Try a dry-run select with explicit service role header
+    // Verify the sponsor level exists
     try {
-      const { data: levelCheck, error: levelError } = await supabase
+      const { data: levelCheck, error: levelError } = await adminClient
         .from('sponsor_levels')
         .select('id')
-        .eq('id', metadata.level)
-        .single()
-        .headers(serviceRoleHeaders);
+        .eq('name', metadata.level)
+        .single();
       
       console.log('Level check result:', { 
         hasLevel: !!levelCheck,
-        error: levelError,
-        headers: serviceRoleHeaders
+        error: levelError
       });
       
       if (levelError) {
         throw new Error(`Failed to verify sponsor level: ${levelError.message}`);
+      }
+
+      if (!levelCheck) {
+        throw new Error(`Sponsor level not found: ${metadata.level}`);
       }
     } catch (e) {
       console.error('Error checking sponsor level:', e);
       throw e;
     }
 
-    // Insert sponsor with UUID and explicit service role headers
-    console.log('Attempting sponsor insert with headers:', serviceRoleHeaders);
+    // Insert sponsor with admin client
+    console.log('Attempting sponsor insert with admin client');
     
-    const { data, error } = await supabase
+    const { data, error } = await adminClient
       .from('sponsors')
       .insert({
-        id: crypto.randomUUID(), // Generate UUID for the id field
         name: metadata.name,
         level: metadata.level,
         year: metadata.year,
-        cloudinary_public_id: uploadResult.public_id,
+        cloudinary_id: uploadResult.public_id,
         image_url: uploadResult.secure_url,
-      }, { headers: serviceRoleHeaders })
-      .select('*')
-      .single()
-      .headers(serviceRoleHeaders);
+        website: metadata.website
+      })
+      .select()
+      .single();
 
     if (error) {
       console.error('Supabase insert error:', {
@@ -248,8 +251,17 @@ async function handleSponsorUpload(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json(data);
+    if (!data) {
+      throw new Error('No data returned from insert');
+    }
+
+    return NextResponse.json({ 
+      message: 'Upload successful',
+      sponsor: data
+    });
+
   } catch (error) {
+    // Log error details
     console.error('Upload error details:', {
       error,
       errorMessage: error instanceof Error ? error.message : 'Unknown error',
@@ -259,12 +271,13 @@ async function handleSponsorUpload(request: NextRequest) {
       cloudinaryConfig: {
         cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
         hasApiKey: !!process.env.CLOUDINARY_API_KEY,
-        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
+        hasApiSecret: !!process.env.CLOUDINARY_API_SECRET
       },
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      uploadResult: uploadResult ? 'Present' : 'Missing',
+      uploadResult: uploadResult ? 'Present' : 'Missing'
     });
 
+    // Return error response
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -273,6 +286,6 @@ async function handleSponsorUpload(request: NextRequest) {
 }
 
 // Export the route handler
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   return handleSponsorUpload(request);
 }

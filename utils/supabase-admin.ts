@@ -1,9 +1,11 @@
+import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
 /**
  * Initialize the Supabase admin client with service role key.
  * This client should only be used in server-side code for admin operations.
+ * Uses the new @supabase/ssr package for better Edge compatibility.
  */
 export const getSupabaseAdmin = () => {
   console.log('Initializing Supabase admin client...');
@@ -72,7 +74,7 @@ export const getSupabaseAdmin = () => {
           'x-client-info': `@supabase/supabase-js-admin`,
           'x-client-request': 'true'
         },
-        fetch: async (url, options = {}) => {
+        fetch: async (url, options: RequestInit = {}) => {
           console.log('Supabase request:', {
             url: url.toString(),
             method: options.method,
