@@ -9,6 +9,10 @@ import type { CookieOptions } from '@supabase/ssr';
  * This client should only be used in server-side code for admin operations.
  * Uses the new @supabase/ssr package for better Edge compatibility.
  */
+/**
+ * Initialize the Supabase admin client with service role key.
+ * This client should only be used in server-side code for admin operations.
+ */
 export const getSupabaseAdmin = () => {
   console.log('Initializing Supabase admin client...');
   console.log('Environment:', process.env.NODE_ENV);
@@ -32,23 +36,6 @@ export const getSupabaseAdmin = () => {
     throw new Error('Missing env.SUPABASE_SERVICE_ROLE_KEY');
   }
 
-  // Verify the JWT role
-  try {
-    const jwt = supabaseServiceRoleKey.split('.')[1];
-    const payload = JSON.parse(Buffer.from(jwt, 'base64').toString());
-    console.log('Service key role verification:', {
-      role: payload.role,
-      iss: payload.iss,
-      exp: new Date(payload.exp * 1000).toISOString()
-    });
-    
-    if (payload.role !== 'service_role') {
-      console.error('WARNING: Service key does not have service_role!');
-    }
-  } catch (e) {
-    console.error('Error verifying service role key:', e);
-  }
-
   // Create client with service role configuration
   const client = createClient<Database>(
     supabaseUrl,
@@ -58,9 +45,6 @@ export const getSupabaseAdmin = () => {
         autoRefreshToken: false,
         persistSession: false,
         detectSessionInUrl: false
-      },
-      db: {
-        schema: 'public'
       },
       global: {
         headers: {
@@ -105,9 +89,12 @@ export const getSupabaseAdmin = () => {
 
   console.log('Supabase admin client initialized successfully');
   return client;
-}
+};
 
-// Always create a fresh client for each request to avoid session sharing
+/**
+ * Get a Supabase client for the current request.
+ * This client will use the user's session if available.
+ */
 export const getSupabaseClient = () => {
   const cookieStore = cookies();
   return createServerClient<Database>(
