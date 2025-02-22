@@ -41,40 +41,16 @@ async function handleSponsorUpload(request: NextRequest): Promise<NextResponse> 
     // Initialize services for this request
     configureCloudinary();
     
-    // Get the user session
-    const supabase = createRouteHandlerClient<Database>({ cookies });
-    try {
-      const { data: { session: userSession }, error } = await supabase.auth.getSession();
-      session = userSession;
-      sessionError = error;
-      
-      if (error) {
-        console.error('Session error:', error);
-        return NextResponse.json(
-          { error: 'Authentication error', details: error.message },
-          { status: 401 }
-        );
-      }
-
-      if (!session) {
-        return NextResponse.json(
-          { error: 'Unauthorized - No session found' },
-          { status: 401 }
-        );
-      }
-    } catch (e) {
-      console.error('Error getting session:', e);
-      return NextResponse.json(
-        { error: 'Internal server error during authentication' },
-        { status: 500 }
-      );
-    }
-
     // Get admin client for database operations
     const adminClient = getSupabaseAdmin();
     
     // Log client configuration and test table access
     console.log('Testing Supabase admin access...');
+    console.log('Admin client headers:', {
+      hasAuthHeader: !!adminClient['headers']?.['Authorization'],
+      hasApiKey: !!adminClient['headers']?.['apikey'],
+      hasServiceRole: !!adminClient['headers']?.['x-supabase-auth-role']
+    });
     
     // First verify we can access sponsor_levels
     const { data: levelData, error: levelError } = await adminClient
@@ -84,21 +60,27 @@ async function handleSponsorUpload(request: NextRequest): Promise<NextResponse> 
     
     if (levelError) {
       console.error('Error accessing sponsor_levels:', levelError);
-      throw new Error(`Admin access denied to sponsor_levels: ${levelError.message}`);
+      return NextResponse.json(
+        { error: 'Database access error', details: levelError.message },
+        { status: 403 }
+      );
     }
-    console.log('Successfully accessed sponsor_levels table');
+    console.log('Successfully accessed sponsor_levels table, data:', levelData);
     
     // Then verify we can access sponsors table
-    const { data: testData, error: testError } = await adminClient
+    const { data: testSponsorData, error: testError } = await adminClient
       .from('sponsors')
       .select('id')
       .limit(1);
     
     if (testError) {
       console.error('Error accessing sponsors table:', testError);
-      throw new Error(`Admin access denied to sponsors: ${testError.message}`);
+      return NextResponse.json(
+        { error: 'Database access error', details: testError.message },
+        { status: 403 }
+      );
     }
-    console.log('Successfully accessed sponsors table');
+    console.log('Successfully accessed sponsors table, data:', testSponsorData);
     
     console.log('Supabase admin access verified successfully');
     console.log('Supabase client configuration:', {
@@ -111,7 +93,7 @@ async function handleSponsorUpload(request: NextRequest): Promise<NextResponse> 
         sessionError,
       },
       tableAccess: {
-        hasAccess: !!testData,
+        hasAccess: !!testSponsorData,
         error: testError
       }
     });

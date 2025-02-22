@@ -72,7 +72,9 @@ export const getSupabaseAdmin = () => {
           'x-supabase-auth-role': 'service_role',
           // Additional headers for debugging
           'x-client-info': `@supabase/supabase-js-admin`,
-          'x-client-request': 'true'
+          'x-client-request': 'true',
+          // Ensure content type is set
+          'Content-Type': 'application/json'
         },
         fetch: async (url, options: RequestInit = {}) => {
           console.log('Supabase request:', {
