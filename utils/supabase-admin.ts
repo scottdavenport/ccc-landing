@@ -7,11 +7,6 @@ import type { CookieOptions } from '@supabase/ssr';
 /**
  * Initialize the Supabase admin client with service role key.
  * This client should only be used in server-side code for admin operations.
- * Uses the new @supabase/ssr package for better Edge compatibility.
- */
-/**
- * Initialize the Supabase admin client with service role key.
- * This client should only be used in server-side code for admin operations.
  */
 export const getSupabaseAdmin = () => {
   console.log('Initializing Supabase admin client...');
@@ -55,24 +50,29 @@ export const getSupabaseAdmin = () => {
     }
   );
 
-  // Add request logging
-  const { fetch: originalFetch } = client;
-  client.fetch = async (url: URL | string, options: RequestInit = {}) => {
-    console.log('Supabase request:', {
-      url: url.toString(),
-      method: options.method,
-      headers: options.headers,
-    });
+  // Log all requests and responses
+  const supabaseUrlObj = new URL(supabaseUrl);
+  const originalFetch = global.fetch;
+  global.fetch = async (url: URL | RequestInfo, init?: RequestInit) => {
+    if (url.toString().startsWith(supabaseUrlObj.origin)) {
+      console.log('Supabase request:', {
+        url: url.toString(),
+        method: init?.method,
+        headers: init?.headers,
+      });
+
+      // Ensure service role headers are present
+      const headers = new Headers(init?.headers);
+      headers.set('Authorization', `Bearer ${supabaseServiceRoleKey}`);
+      headers.set('apikey', supabaseServiceRoleKey);
+      init = { ...init, headers };
+    }
+
+    const response = await originalFetch(url, init);
     
-    // Add service role headers
-    const headers = new Headers(options.headers);
-    headers.set('Authorization', `Bearer ${supabaseServiceRoleKey}`);
-    headers.set('apikey', supabaseServiceRoleKey);
-    options.headers = headers;
-    
-    const response = await originalFetch(url, options);
-    if (!response.ok) {
+    if (url.toString().startsWith(supabaseUrlObj.origin) && !response.ok) {
       console.error('Supabase request failed:', {
+        url: url.toString(),
         status: response.status,
         statusText: response.statusText,
         headers: Object.fromEntries(response.headers.entries()),
@@ -84,6 +84,7 @@ export const getSupabaseAdmin = () => {
         console.error('Could not parse error response body');
       }
     }
+    
     return response;
   };
 
@@ -93,44 +94,13 @@ export const getSupabaseAdmin = () => {
 
 /**
  * Get a Supabase client for the current request.
- * This client will use the user's session if available.
+ * This client will use the admin client for now until we implement proper auth.
  */
-export const getSupabaseClient = () => {
-  const cookieStore = cookies();
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // Handle error
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.delete({ name, ...options });
-          } catch (error) {
-            // Handle error
-          }
-        },
-      },
-    }
-  );
-};
-
-
-  return client;
-};
-
-// Always create a fresh client for each request to avoid session sharing
 export const getSupabaseClient = () => getSupabaseAdmin();
 
+/**
+ * Create a new sponsor in the database.
+ */
 export async function createSponsor(sponsor: Omit<Database['public']['Tables']['sponsors']['Row'], 'id' | 'created_at' | 'updated_at'>) {
   try {
     console.log('Creating sponsor with data:', sponsor);
